@@ -38,7 +38,7 @@ typedef double (*Func)(double operand);
 
 // Binary function pointer type accepted by Plotdata
 typedef double (*BinFunc)(double operand1, double operand2);
-#define binfunc_ref BinFunc & 
+#define binfunc_ref BinFunc &
 
 /** When true defines a range to be logarithmic */
 typedef bool LogSpace;

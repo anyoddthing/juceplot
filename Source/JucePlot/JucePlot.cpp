@@ -10,7 +10,7 @@
  */
 #include <cmath>
 
-#include "Koolplot.h"
+#include "JucePlot.h"
 
 // ----------- more function prototypes -------  ----------------------
 // May be placed in the header file for user program access if they are

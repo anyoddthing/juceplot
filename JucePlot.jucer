@@ -6,13 +6,13 @@
               jucerVersion="5.0.2">
   <MAINGROUP id="W5WTnp" name="JucePlot">
     <GROUP id="{C7F0E104-850F-BBB8-1D40-E7D9EB7CBDC9}" name="Source">
-      <GROUP id="{8836EEA3-92DA-72ED-C1AA-B17F2D7810E8}" name="koolplot">
-        <FILE id="TSVeVi" name="koolplot.cpp" compile="1" resource="0" file="Source/koolplot/koolplot.cpp"/>
-        <FILE id="TFLEzi" name="koolplot.h" compile="0" resource="0" file="Source/koolplot/koolplot.h"/>
-        <FILE id="eYin36" name="Plotdata.cpp" compile="1" resource="0" file="Source/koolplot/Plotdata.cpp"/>
-        <FILE id="nNUtau" name="Plotdata.hpp" compile="0" resource="0" file="Source/koolplot/Plotdata.hpp"/>
-        <FILE id="aMMaKB" name="Plotstream.cpp" compile="1" resource="0" file="Source/koolplot/Plotstream.cpp"/>
-        <FILE id="gbiPXl" name="Plotstream.hpp" compile="0" resource="0" file="Source/koolplot/Plotstream.hpp"/>
+      <GROUP id="{8836EEA3-92DA-72ED-C1AA-B17F2D7810E8}" name="JucePlot">
+        <FILE id="F9A8lu" name="JucePlot.cpp" compile="1" resource="0" file="Source/JucePlot/JucePlot.cpp"/>
+        <FILE id="jOUdWI" name="JucePlot.h" compile="0" resource="0" file="Source/JucePlot/JucePlot.h"/>
+        <FILE id="sSjsJ4" name="Plotdata.cpp" compile="1" resource="0" file="Source/JucePlot/Plotdata.cpp"/>
+        <FILE id="YRSRIR" name="Plotdata.hpp" compile="0" resource="0" file="Source/JucePlot/Plotdata.hpp"/>
+        <FILE id="BxHd3t" name="Plotstream.cpp" compile="1" resource="0" file="Source/JucePlot/Plotstream.cpp"/>
+        <FILE id="T0Y0cG" name="Plotstream.hpp" compile="0" resource="0" file="Source/JucePlot/Plotstream.hpp"/>
       </GROUP>
       <FILE id="o83YBg" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>

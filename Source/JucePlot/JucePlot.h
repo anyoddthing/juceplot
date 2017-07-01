@@ -1,28 +1,4 @@
-/**
- * Header file to the "koolplot" library
- * 
- * Provides basic, but also very simple-to-use 2D data plotting for
- * C and C++ programs using the WinBGIm graphics library.
- *
- * Example:
- * #include <koolplot.h>
- * int main()
- * {
- * 		Plotdata x(0, 360), y = sin(x * M_PI / 180);
- *		plot(x, y);
- *		return 0;
- * }
- *
- * The "plot" function opens a window and displays the graph. The window
- * is closed when any key is pressed.
- *
- * Author: 	jlk
- * Version:	1.1
- * Date:	July 2005
- * 
- * This file is in the public domain and can be used without any
- * restriction.
- */
+
  
 #ifndef KOOLPLOT_H
 #define KOOLPLOT_H

@@ -7,7 +7,7 @@
 */
 
 #include "MainComponent.h"
-#include "koolplot/koolplot.h"
+#include "JucePlot/JucePlot.h"
 
 //==============================================================================
 MainContentComponent::MainContentComponent()
