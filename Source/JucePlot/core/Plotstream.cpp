@@ -22,7 +22,9 @@
 #include <sstream>
 #include <cfloat>
 
-#include "Plotstream.hpp"
+#include "Plotstream.h"
+
+using namespace juce;
 
 // Constants used exclusively in this file
 static const int border_height	= 20;
@@ -364,7 +366,7 @@ static void click_handler(int x, int y)
 //	int poly[8] = {x1, y1, x2, y1, x2, y2, x1, y2};
 //	int bkColour = getbkcolor();
 //	setfillstyle(EMPTY_FILL, bkColour );
-//	graphics->setColour(bkColour);
+//	graphics.setColour(bkColour);
 //	fillpoly(4, poly);
 //}
 
@@ -374,11 +376,6 @@ static void click_handler(int x, int y)
 Plotstream::Plotstream(int width, int height)
 : winWidth(width), winHeight(height), plotStarted(false)
 {
-    image = Image(Image::PixelFormat::ARGB, 2 * width, 2 * height, true);
-    graphics = new Graphics(image);
-    graphics->getInternalContext().addTransform(AffineTransform::scale(2));
-    graphics->fillAll(Colours::beige);
-
 	marked = false;
     colour = lastColour = graph_color;
 
@@ -386,7 +383,7 @@ Plotstream::Plotstream(int width, int height)
 	left_clicked = false;
 }
 
-void Plotstream::plot(const Plotdata & x, const Plotdata & y, Colour colour)
+void Plotstream::plot(Graphics& graphics, const Plotdata& x, const Plotdata& y, Colour colour)
 {
     this->colour = colour;
 	// Need 3 points minimum to do a plot
@@ -413,10 +410,10 @@ void Plotstream::plot(const Plotdata & x, const Plotdata & y, Colour colour)
 	x_scale = x_range / plotWidth;
 	y_scale = y_range / plotHeight;
 
-	drawAxes();
+	drawAxes(graphics);
 	
 	/* Draw curve */
-	drawFunc(x.getData(), y.getData());
+	drawFunc(graphics, x.getData(), y.getData());
 }
 
 /* Convert graph x value to screen coordinate */
@@ -655,7 +652,7 @@ Rounding Plotstream::nearRoundY(double & val, Rounding direction) const
 }
 
 /* Draw the axes */
-void Plotstream::drawAxes()
+void Plotstream::drawAxes(juce::Graphics& graphics)
 {
 	int xDivs;				// number of x divisions
 	int yDivs;				// number of y divisions
@@ -664,8 +661,8 @@ void Plotstream::drawAxes()
 	long int intVal;
 	      	   
 	// draw the rectangle
-	graphics->setColour(Colours::darkgrey);
-    graphics->drawRect(
+	graphics.setColour(Colours::darkgrey);
+    graphics.drawRect(
         left_border - 1,
         border_height - 1,
         plotWidth + 2,
@@ -681,12 +678,12 @@ void Plotstream::drawAxes()
 		yDivs = getYDivisor(lo_y, hi_y, plotHeight);
 		
 	// draw the grid
-	graphics->setColour(Colours::lightgrey);
+	graphics.setColour(Colours::lightgrey);
     float dashPattern[] = {4, 4};
 	// Horizontal grid
 	for (int i = yDivs - 1; i > 0; i--)
 	{
-        graphics->drawDashedLine(Line<float>(
+        graphics.drawDashedLine(Line<float>(
             left_border, border_height + plotHeight * i / yDivs,
             winWidth - border_width, border_height + plotHeight * i / yDivs),
             dashPattern, 2
@@ -696,7 +693,7 @@ void Plotstream::drawAxes()
 	// Vertical grid
 	for (int i = xDivs - 1; i > 0; i--)
 	{
-        graphics->drawDashedLine(Line<float>(
+        graphics.drawDashedLine(Line<float>(
             left_border + 1 + plotWidth * i / xDivs, border_height,
             left_border + 1 + plotWidth * i / xDivs, winHeight - border_height),
             dashPattern, 2
@@ -704,16 +701,16 @@ void Plotstream::drawAxes()
 	}
 
 	// Draw Axes markers
-	graphics->setColour(Colours::darkgrey);
+	graphics.setColour(Colours::darkgrey);
 
 	// Y axis
 	for (int i = yDivs - 1; i > 0; i--)
 	{
-        graphics->drawLine(
+        graphics.drawLine(
             left_border, border_height + plotHeight * i / yDivs,
             left_border + mark_length, border_height + plotHeight * i / yDivs
         );
-		graphics->drawLine(
+		graphics.drawLine(
             winWidth - border_width, border_height + plotHeight * i / yDivs,
             winWidth - border_width - mark_length, border_height + plotHeight * i / yDivs
         );
@@ -722,24 +719,24 @@ void Plotstream::drawAxes()
 	// X axis
 	for (int i = xDivs - 1; i > 0; i--)
 	{
-		graphics->drawLine(
+		graphics.drawLine(
             left_border + 1 + plotWidth * i / xDivs, winHeight - border_height,
             left_border + 1 + plotWidth * i / xDivs, winHeight - border_height - mark_length
         );
-		graphics->drawLine(
+		graphics.drawLine(
             left_border + 1 + plotWidth * i / xDivs, border_height,
             left_border + 1 + plotWidth * i / xDivs, border_height + mark_length
         );
 	}
 
 	// Number the axes
-	graphics->setColour(Colours::black);
+	graphics.setColour(Colours::black);
 
 	// Y axis
     Font font;
     font.setTypefaceName(Font::getDefaultSansSerifFontName());
-    graphics->setFont(font);
-    auto fontHeight = graphics->getCurrentFont().getHeight();
+    graphics.setFont(font);
+    auto fontHeight = graphics.getCurrentFont().getHeight();
     
 	divLength = int(plotHeight / yDivs);
 	int xpos = left_border - 3;
@@ -752,7 +749,7 @@ void Plotstream::drawAxes()
 		if(fabs(val) < chouia * (hi_y - lo_y))
 			val = 0;
 		auto asciival = dtoa(val, 3);
-        graphics->drawSingleLineText(asciival, xpos, ypos + divLength * i + fontHeight / 3, Justification::right);
+        graphics.drawSingleLineText(asciival, xpos, ypos + divLength * i + fontHeight / 3, Justification::right);
 	}
 
 	// X axis
@@ -765,17 +762,17 @@ void Plotstream::drawAxes()
 		if(fabs(val) < chouia * (hi_x - lo_x))
 			val = 0;
 		auto asciival = dtoa(val, 3);
-        graphics->drawSingleLineText(asciival, xpos + plotWidth * i / xDivs, ypos, Justification::horizontallyCentred);
+        graphics.drawSingleLineText(asciival, xpos + plotWidth * i / xDivs, ypos, Justification::horizontallyCentred);
 	}
 }
 
-void Plotstream::drawFunc(const Plotdata & x, const Plotdata & y)
+void Plotstream::drawFunc(juce::Graphics& graphics, const Plotdata & x, const Plotdata & y)
 {
 	vector<double>::const_iterator x_it  = x.getData().begin();
 	vector<double>::const_iterator y_it  = y.getData().begin();
 	vector<double>::const_iterator x_end = x.getData().end();
 
-	setFgColor(colour);
+	setFgColor(graphics, colour);
     
     Point<float> start;
 	if (isfinite(*y_it) && isfinite(*x_it))
@@ -790,7 +787,7 @@ void Plotstream::drawFunc(const Plotdata & x, const Plotdata & y)
     {
          if (!isfinite(*y_it) && !isfinite(*x_it))
             if (x_it + 1 != x_end && x_it + 2 != x_end)
-                handleCommand(x_it, y_it);
+                handleCommand(graphics, x_it, y_it);
     }        
 	
 	while (++x_it != x_end)
@@ -799,7 +796,7 @@ void Plotstream::drawFunc(const Plotdata & x, const Plotdata & y)
 		{
 			if (plotStarted)
             {
-                graphics->drawLine(start.getX(), start.getY(), X(*x_it), Y(*y_it));
+                graphics.drawLine(start.getX(), start.getY(), X(*x_it), Y(*y_it));
             }
             
             plotStarted = true;
@@ -813,7 +810,7 @@ void Plotstream::drawFunc(const Plotdata & x, const Plotdata & y)
             // change request or a single point drawing request.
              if (!isfinite(*y_it) && !isfinite(*x_it))
                 if (x_it + 1 != x_end && x_it + 2 != x_end)
-                    handleCommand(x_it, y_it);
+                    handleCommand(graphics, x_it, y_it);
         }
     }
 }
@@ -854,7 +851,7 @@ void Plotstream::drawFunc(const Plotdata & x, const Plotdata & y)
 //			delRectangle(left_border, 0, winWidth - 1, border_height - 2);
 //					
 //			settextjustify(CENTER_TEXT, CENTER_TEXT);
-//			graphics->setColour(BLUE);
+//			graphics.setColour(BLUE);
 //		   	   	   	   	   
 //			// Compose and print new location string
 //			strcpy(location, "( ");
@@ -886,41 +883,41 @@ void Plotstream::drawFunc(const Plotdata & x, const Plotdata & y)
 
 // Ancillary function used locally by drawMarker()
 // draws the marker shape in X and Y.
-void Plotstream::drawMarkShape(int x, int y)
+void Plotstream::drawMarkShape(juce::Graphics& graphics, int x, int y)
 {
 	// Horz
     
-	graphics->drawLine(x - 4, y, x + 4, y); 		// centre line
-	graphics->drawLine(x - 5, y - 1, x - 3, y - 1);
-	graphics->drawLine(x - 5, y + 1, x - 3, y + 1);	// side lines
-	graphics->drawLine(x + 5, y - 1, x + 3, y - 1);
-	graphics->drawLine(x + 5, y + 1, x + 3, y + 1);
+	graphics.drawLine(x - 4, y, x + 4, y); 		// centre line
+	graphics.drawLine(x - 5, y - 1, x - 3, y - 1);
+	graphics.drawLine(x - 5, y + 1, x - 3, y + 1);	// side lines
+	graphics.drawLine(x + 5, y - 1, x + 3, y - 1);
+	graphics.drawLine(x + 5, y + 1, x + 3, y + 1);
 	// Vert
-	graphics->drawLine(x	, y - 4, x	, y + 4);	// centre line
-	graphics->drawLine(x - 1, y - 5, x - 1, y - 3);
-	graphics->drawLine(x + 1, y - 5, x + 1, y - 3);	// side lines
-	graphics->drawLine(x - 1, y + 5, x - 1, y + 3);
-	graphics->drawLine(x + 1, y + 5, x + 1, y + 3);
+	graphics.drawLine(x	, y - 4, x	, y + 4);	// centre line
+	graphics.drawLine(x - 1, y - 5, x - 1, y - 3);
+	graphics.drawLine(x + 1, y - 5, x + 1, y - 3);	// side lines
+	graphics.drawLine(x - 1, y + 5, x - 1, y + 3);
+	graphics.drawLine(x + 1, y + 5, x + 1, y + 3);
 }	    
 		
 // Draw a marker at the current cursor position
 // Will erase only if erase is true
-void Plotstream::drawMarker(bool erase)
+void Plotstream::drawMarker(juce::Graphics& graphics, bool erase)
 {
 	/* select XOR drawing mode and marker colour */
 //    setwritemode(XOR_PUT);
     
-    setFgColor(marker_color);
+    setFgColor(graphics, marker_color);
 
    	if (marked) // then erase existing marker
 	{
-		drawMarkShape(lastX, lastY);
+		drawMarkShape(graphics, lastX, lastY);
 		marked = false;
     }
    
     if(!erase)
 	{
-	    drawMarkShape(cursorX, cursorY);
+	    drawMarkShape(graphics, cursorX, cursorY);
 		lastX = cursorX;
 		lastY = cursorY;
 	    marked = true;
@@ -928,34 +925,34 @@ void Plotstream::drawMarker(bool erase)
 	
 	/* Restore drawing mode */
 //    setwritemode(COPY_PUT);
-    resetFgColor();
+    resetFgColor(graphics);
 }
 
 // Ancillary function used locally by drawSinglePoint()
 // draws the point shape in X and Y.
-void Plotstream::drawPointShape(int x, int y)
+void Plotstream::drawPointShape(juce::Graphics& graphics, int x, int y)
 {
-    graphics->fillRect(x - 2, y - 2, 5, 5);
+    graphics.fillRect(x - 2, y - 2, 5, 5);
 }
 
 // Draw a single point at the given coordinates
-void Plotstream::drawSinglePoint(double xCoord, double yCoord)
+void Plotstream::drawSinglePoint(juce::Graphics& graphics, double xCoord, double yCoord)
 {
-    drawPointShape(X(xCoord) + 1, Y(yCoord));
+    drawPointShape(graphics, X(xCoord) + 1, Y(yCoord));
 }
 
 // Set new foreground colour, remember last colour
-void Plotstream::setFgColor(Colour fgColour)
+void Plotstream::setFgColor(juce::Graphics& graphics, Colour fgColour)
 {
     lastColour = colour;
     colour = fgColour;
-    graphics->setColour(fgColour);
+    graphics.setColour(fgColour);
 }
 
 // Reset foreground colour to last used colour
-void Plotstream::resetFgColor(void)
+void Plotstream::resetFgColor(juce::Graphics& graphics)
 {
-    setFgColor(lastColour);
+    setFgColor(graphics, lastColour);
 }
 
 /*
@@ -969,7 +966,7 @@ void Plotstream::resetFgColor(void)
  *                  a known command. They will point to the last data point
  *                  in the request sequence otherwise.
  */
-void Plotstream::handleCommand( dataIterator &x_it, dataIterator &y_it)
+void Plotstream::handleCommand(juce::Graphics& graphics, dataIterator &x_it, dataIterator &y_it)
 {
     // Check if command is a colour change
     int newColour = Plotdata::colorChange(x_it, y_it);
@@ -977,16 +974,16 @@ void Plotstream::handleCommand( dataIterator &x_it, dataIterator &y_it)
     if (Plotdata::isColor(newColour))
     {
         if (newColour == RESETCOLOR)
-            setFgColor(lastColour);
+            setFgColor(graphics, lastColour);
         else
-            setFgColor(Colour(newColour));
+            setFgColor(graphics, Colour(newColour));
     }
     // else, draw a single point if requested
     else
     {
         double xCoord, yCoord;
         if(Plotdata::singlePoint(xCoord, yCoord, x_it, y_it))
-            drawSinglePoint(xCoord, yCoord);
+            drawSinglePoint(graphics, xCoord, yCoord);
     }       
 }
 

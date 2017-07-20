@@ -7,12 +7,20 @@
   <MAINGROUP id="W5WTnp" name="JucePlot">
     <GROUP id="{C7F0E104-850F-BBB8-1D40-E7D9EB7CBDC9}" name="Source">
       <GROUP id="{8836EEA3-92DA-72ED-C1AA-B17F2D7810E8}" name="JucePlot">
-        <FILE id="F9A8lu" name="JucePlot.cpp" compile="1" resource="0" file="Source/JucePlot/JucePlot.cpp"/>
+        <GROUP id="{0EFE41B4-585A-F3E9-87B5-67CF1AACF0A5}" name="gui">
+          <FILE id="ulL1h3" name="PlotComponent.h" compile="0" resource="0" file="Source/JucePlot/gui/PlotComponent.h"/>
+        </GROUP>
+        <GROUP id="{55FA730D-B2F0-4091-8562-42B34FC66D5E}" name="core">
+          <FILE id="Z0Gwza" name="Plotdata.cpp" compile="0" resource="0" file="Source/JucePlot/core/Plotdata.cpp"/>
+          <FILE id="nVx4wb" name="Plotdata.h" compile="0" resource="0" file="Source/JucePlot/core/Plotdata.h"/>
+          <FILE id="XF1EC4" name="PlotFunctions.cpp" compile="0" resource="0"
+                file="Source/JucePlot/core/PlotFunctions.cpp"/>
+          <FILE id="LVcbOO" name="PlotFunctions.h" compile="0" resource="0" file="Source/JucePlot/core/PlotFunctions.h"/>
+          <FILE id="Y9ZXNG" name="Plotstream.cpp" compile="0" resource="0" file="Source/JucePlot/core/Plotstream.cpp"/>
+          <FILE id="MXEUOO" name="Plotstream.h" compile="0" resource="0" file="Source/JucePlot/core/Plotstream.h"/>
+        </GROUP>
+        <FILE id="F9A8lu" name="JucePlot.cpp" compile="0" resource="0" file="Source/JucePlot/JucePlot.cpp"/>
         <FILE id="jOUdWI" name="JucePlot.h" compile="0" resource="0" file="Source/JucePlot/JucePlot.h"/>
-        <FILE id="sSjsJ4" name="Plotdata.cpp" compile="1" resource="0" file="Source/JucePlot/Plotdata.cpp"/>
-        <FILE id="YRSRIR" name="Plotdata.hpp" compile="0" resource="0" file="Source/JucePlot/Plotdata.hpp"/>
-        <FILE id="BxHd3t" name="Plotstream.cpp" compile="1" resource="0" file="Source/JucePlot/Plotstream.cpp"/>
-        <FILE id="T0Y0cG" name="Plotstream.hpp" compile="0" resource="0" file="Source/JucePlot/Plotstream.hpp"/>
       </GROUP>
       <FILE id="o83YBg" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
@@ -42,10 +50,12 @@
         <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
         <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
         <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
+        <MODULEPATH id="JucePlot" path="Source"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>
   <MODULES>
+    <MODULE id="JucePlot" showAllCode="0" useLocalCopy="0"/>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0"/>

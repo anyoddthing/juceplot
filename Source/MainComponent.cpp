@@ -13,6 +13,10 @@
 MainContentComponent::MainContentComponent()
 {
     setSize(800, 600);
+    Plotdata x(-4.0, 4.0), y = sin(x) - 0.5*x;
+    plotComponent_ = new PlotComponent(std::move(x), std::move(y));
+    plotComponent_->setSize(800, 600);
+    addAndMakeVisible(plotComponent_);
 }
 
 MainContentComponent::~MainContentComponent()
@@ -22,11 +26,8 @@ MainContentComponent::~MainContentComponent()
 void MainContentComponent::paint (Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
+    DBG("paint main");
     g.fillAll(Colours::white);
-
-    Plotdata x(-4.0, 4.0), y = sin(x) - 0.5*x;
-    auto image = plot(x, y);
-    g.drawImageTransformed(image, AffineTransform::scale(0.5f));
 }
 
 void MainContentComponent::resized()

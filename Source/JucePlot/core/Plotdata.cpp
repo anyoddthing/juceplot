@@ -20,7 +20,7 @@
 #include <cmath>
 #include <limits>
 
-#include "Plotdata.hpp" 
+#include "Plotdata.h" 
 
 bool isColor(int color)
 {

@@ -1,33 +1,8 @@
-/**
- * Class Plotdata
- * 
- * Stores data for one 2D plotting axis
- *
- * Provides operators and mathematical functions to map a Plotdata
- * object to another using unary and binary functions.
- *
- * Provides insertion and extraction of special commands into and from
- * Plotdata pairs as static operations.
- * Available commands are:
- *      colourChange (to change the foreground colour of graphs)
- *      singlePoint  (to draw a single point of data as a special marker)
- *
- * Author: 	jlk
- * Version:	1.1
- * Date:	July 2005
- * 
- * This file is in the public domain and can be used without any
- * restriction.
- */
- 
-#ifndef Plotdata_H
-#define Plotdata_H
+#pragma once
 
 #include <cmath>
 #include <vector>
 #include <iostream>
-
-#include "../../JuceLibraryCode/JuceHeader.h"
 
 using namespace std;
 
@@ -159,6 +134,4 @@ private:
 	Func userFunction; // Any user-designed unary function
 	BinFunc userBinFunction; // Any user-designed binary function
 };
-
-#endif
 

@@ -1,22 +1,6 @@
-/* File: Plotstream.h
- *
- * Class Plotstream
- * A plotstream opens a window, displays a data plot, then closes
- * the window when the user presses a key.
- *
- * Author: 	jlk
- * Version:	1.1
- * Date:	July 2005
- * 
- * This file is in the public domain and can be used without any
- * restriction.
- */
-#ifndef PLOTSTREAM_H
-#define PLOTSTREAM_H 
+#pragma once
 
-//#include <graphics.h>
-#include "PlotData.hpp"
-#include "../../JuceLibraryCode/JuceHeader.h"
+#include "PlotData.h"
 
 enum Rounding
 {
@@ -29,8 +13,7 @@ class Plotstream
 {
 public:
 	Plotstream(int width = 640, int height = 320);
-	void plot(const Plotdata & x, const Plotdata & y, Colour colour = Colours::green);
-    Image getImage() { return image; }
+	void plot(juce::Graphics& graphics, const Plotdata& x, const Plotdata& y, juce::Colour colour = juce::Colours::green);
 
 private:
 	int winWidth, winHeight;
@@ -44,11 +27,8 @@ private:
 	bool marked; 					// True when a marker is visible
 	int lastX;
 	int lastY; 						// Location of last marker drawn
-    Colour colour;                     // Current drawing colour
-    Colour lastColour;                 // Previous drawing colour
-    
-    Image image;
-    ScopedPointer<Graphics> graphics;
+    juce::Colour colour;                     // Current drawing colour
+    juce::Colour lastColour;                 // Previous drawing colour
     
 	/* Convert graph x value to screen coordinate */
 	float X(double x) const;
@@ -65,28 +45,27 @@ private:
 	   /* True if values given are within x and y graph ranges */
 	bool withinRange(double xVal, double yVal) const;
 	/* Draws the axes */
-	void drawAxes();
+	void drawAxes(juce::Graphics& graphics);
 	/* Draw the data */
-	void drawFunc(const Plotdata & x, const Plotdata & y);
+	void drawFunc(juce::Graphics& graphics, const Plotdata & x, const Plotdata & y);
 	/* Watches the mouse and prints cursor coords if clicked */
 	bool watchMouse();
 	// Draw a marker at the current cursor position. Erase if erase is true
-	void drawMarker(bool erase = false);
+	void drawMarker(juce::Graphics& graphics, bool erase = false);
     // Draw a single point at the requested coordinates
-    void drawSinglePoint(double xCoord, double yCoord);
+    void drawSinglePoint(juce::Graphics& graphics, double xCoord, double yCoord);
     // Set new foreground colour, store last colour
-    void setFgColor(Colour fgColour);
+    void setFgColor(juce::Graphics& graphics, juce::Colour fgColour);
     // Reset foreground colour to last colour
-    void resetFgColor(void);
+    void resetFgColor(juce::Graphics& graphics);
     // Check whether the stream holds a command at this point (colour change
     // or single point), and handle the command if it does.
-    void handleCommand( dataIterator &x_it, dataIterator &y_it);
+    void handleCommand(juce::Graphics& graphics, dataIterator &x_it, dataIterator &y_it);
     // Draw a marker 
-    void drawMarkShape(int x, int y);
+    void drawMarkShape(juce::Graphics& graphics, int x, int y);
     // Draw a poing
-    void drawPointShape(int x, int y);
+    void drawPointShape(juce::Graphics& graphics, int x, int y);
 
 
 };
 
-#endif
