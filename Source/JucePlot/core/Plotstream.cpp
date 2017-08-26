@@ -16,43 +16,31 @@
  * This file is in the public domain and can be used without
  * any restriction.
  */
-#include <ostream>
-#include <iomanip>
-#include <string>
-#include <sstream>
-#include <cfloat>
-
-#include "Plotstream.h"
 
 using namespace juce;
+using namespace std;
 
 // Constants used exclusively in this file
 static const int border_height	= 20;
 static const int border_width	= 20;
-static const int left_border	    = 70;
-static const int mark_length	    = 4;
+static const int left_border	= 70;
+static const int mark_length	= 4;
+
 static const Colour graph_color = Colours::green; // Default only, can be changed
 static const Colour point_color = graph_color; // will be XORed
 static const Colour marker_color	= Colours::cyan; // Will give red in XOR mode over white
 static const float chouia		= 0.0001; // an invisible difference (in drawing terms)
-
-// Mouse events variables used exclusively in this file
-static bool left_clicked = false;
-static int cursorX;
-static int cursorY;
-
 
 // Local function hidden at file scope
 // dtoa safely converts a double to the equivalent char *
 // It is the responsibility of the calling program to delete the returned string
 static String dtoa(double val, int precision)
 {
-	ostringstream ostr;
+    ostringstream ostr;
 	ostr.precision(precision);
 	ostr << val;
 	return String(ostr.str().c_str());
 }
-
 
 // Local function hidden at file scope
 // pow10l() does not exist in mingw (redefine as inline wrapper here)
@@ -65,11 +53,10 @@ static inline double pow10l(double x)
  * Rounds double value by discarding very small decimals.
  * (necessary to deal with previous small floating point errors)
  * @param val 		value to round
- * @param sigDigits number of significant digits.
- * @param intrep    all significant digits as a long int 
+ * @param intrep    all significant digits as a long int
  * @return			truncated value as a double (may be inexact)
  */
-static double floatRound(double val, int & sigDigits, long int &intrep)
+static double floatRound(double val, long int &intrep)
 { 
 	bool neg = false;
 	string::size_type i, j;
@@ -94,7 +81,6 @@ static double floatRound(double val, int & sigDigits, long int &intrep)
 	auto decPos = str.find('.');
 	if (decPos == string::npos) // then it's an integer, return now
 	{
-		sigDigits = str.size();
 		intrep = static_cast<long int>(val);
 		return val;
 	}
@@ -149,7 +135,6 @@ static double floatRound(double val, int & sigDigits, long int &intrep)
 	while((unsigned)decPos > str.size()) // The rounding up occurred to the
 		str += '0'; 		   // left of the decimal point. Add 0s
 			
-	sigDigits = str.size();
 	{
 		
 		istringstream istr(str);
@@ -169,28 +154,6 @@ static double floatRound(double val, int & sigDigits, long int &intrep)
 	return res;
 }	 
 
-/* Local function hidden at file scope
- * Obtains a practical y axis range with "round" numbers at both ends
- * Params hold the min and max values in plot data on entry and
- * pass back the practical values on output.
- */
-static void getNearest( double & y_min, double & y_max)
-{
-	int sigdigits; // Holds number of significant digits
-	long int intrep; // the integer representation
-
-	double min = y_min, max = y_max, dif;
-	
-	min = floatRound(min, sigdigits, intrep);
-	max = floatRound(max, sigdigits, intrep);
-	
-	dif = max - min - (y_max - y_min);
-	
-	y_max = floatRound(y_max + dif / 2, sigdigits, intrep);
-	
-	y_min = floatRound(y_min - dif / 2, sigdigits, intrep);
-}
-
 /*
  * Local function hidden at file scope
  * Attempt to guess a convenient divisor for grid along the X axis 
@@ -200,12 +163,12 @@ static void getNearest( double & y_min, double & y_max)
  */
 static int getXDivisor(double lo, double hi, int plotWidth)
 {
-	int sigdigits, pquo, div = 0;
+	int pquo, div = 0;
 	long int intVal;
     double delta = (hi - lo) / plotWidth; // Ignore 1 pixel inaccuracies
     double range = hi - lo;
 
-	floatRound(range, sigdigits, intVal);
+	floatRound(range, intVal);
     
 	// If 0 is on the axis attempt to place it on the grid
 	if(lo < 0 && hi > 0) // 0 is part of the range
@@ -281,8 +244,8 @@ static int getXDivisor(double lo, double hi, int plotWidth)
  */
 static int getYDivisor(double lo, double hi, int plotHeight)
 {
-	int sigdigits, pquo, div = 0;
-	long int intVal;
+	int pquo, div = 0;
+	long int intVal = 0;
     double delta = (hi - lo) / plotHeight; // Ignore 1 pixel inaccuracies
 
 	// If 0 is on the axis attempt to place it on the grid
@@ -317,7 +280,7 @@ static int getYDivisor(double lo, double hi, int plotHeight)
 	
 	// if not, then attempt a reasonable division of the range 
 	double range = hi - lo;
-	floatRound(range, sigdigits, intVal);
+	floatRound(range, intVal);
 	   
 	// If 0 is in the middle try dividing by 4	  
 	if (div == 1)
@@ -344,646 +307,272 @@ static int getYDivisor(double lo, double hi, int plotHeight)
 	return div;
 }
 
-/*
- * Local function hidden at file scope
- * This handler will be triggered on left mouse click.
- * It will record the event and current mouse coordinates in the window
- */
-static void click_handler(int x, int y)
-{
-    left_clicked = true;
-	
-	cursorX = x;
-	cursorY = y;
-}
-
-/*
- * Local function hidden at file scope
- * Delete a rectangle with top left corner x1, y1 and bottom right x2, y2
- */
-//static void delRectangle(int x1, int y1, int x2, int y2)
-//{
-//	int poly[8] = {x1, y1, x2, y1, x2, y2, x1, y2};
-//	int bkColour = getbkcolor();
-//	setfillstyle(EMPTY_FILL, bkColour );
-//	graphics.setColour(bkColour);
-//	fillpoly(4, poly);
-//}
-
-	
 /************************* CLASS FUNCTIONS ***************************/
 
-Plotstream::Plotstream(int width, int height)
-: winWidth(width), winHeight(height), plotStarted(false)
+struct Plotstream::Impl
 {
-	marked = false;
-    colour = lastColour = graph_color;
-
- // Reset file-scope var... don't like this, but necessary for event handling	
-	left_clicked = false;
-}
-
-void Plotstream::plot(Graphics& graphics, const Plotdata& x, const Plotdata& y, Colour colour)
-{
-    this->colour = colour;
-	// Need 3 points minimum to do a plot
-	if(x.size() < 3)
-		return;
-	
-	// Need as many y values as x values to do a plot	 
-	if(x.size() > y.size())
-		return;
-		
-	// Store the hi and lo points of the axes
-    Plotdata::min(x, y, lo_x, lo_y);
-    Plotdata::max(x, y, hi_x, hi_y);
-    
-    // Set Y values to the nearest "round" numbers
-	getNearest(lo_y, hi_y);
-	
-	x_range = hi_x - lo_x;
-	y_range = hi_y - lo_y;
-	
-	plotWidth = winWidth - border_width - left_border;
-    plotHeight = winHeight - 2 * border_width;
-	
-	x_scale = x_range / plotWidth;
-	y_scale = y_range / plotHeight;
-
-	drawAxes(graphics);
-	
-	/* Draw curve */
-	drawFunc(graphics, x.getData(), y.getData());
-}
-
-/* Convert graph x value to screen coordinate */
-float Plotstream::X(double x) const
-{
-	return (x - lo_x) / x_scale + left_border;
-}
-
-/* Convert graph y value to screen coordinate */
-float Plotstream::Y(double y) const
-{
-	return winHeight - border_height - (y - lo_y) / y_scale;
-}
-
-/* Convert screen coordinate to graph x value */
-double Plotstream::plotX(int screenX) const
-{
-	return (screenX - left_border) * x_scale + lo_x;
-}
-
-/* Convert screen coordinate to graph y value */
-double Plotstream::plotY(int screenY) const
-{
-	return (winHeight - border_height - screenY) * y_scale + lo_y;
-}
-
-/* @return  true if given location is within x and y axes ranges */
-bool Plotstream::withinRange( double x, double y) const
-{
-	return	x + x_scale >= lo_x && x - x_scale <= hi_x
-		&&
-			y + y_scale >= lo_y && y - y_scale <= hi_y;
-}
-
-/* Round(est) double within one pixel in X 
- * 
- * @param theVal the value to be rounded, passed back rounded to caller
- * @param direction the requested direction of rounding UP, DOWN or ANY
- * @return the direction the rounding took place.
- */
-Rounding Plotstream::nearRoundX(double & val, Rounding direction) const
-{
-	int valSigdigits;
-	int upSigdigits;
-	int downSigdigits;
-	long int intrep;
-	double theVal, upVal, downVal;
-	
-	theVal = floatRound(val, valSigdigits, intrep);
-	
-	if (direction == UP) // If a higher or equal value has been requested
-	{
-		upVal = floatRound(val + x_scale, upSigdigits, intrep);
-		if (theVal < 0 && upVal > 0) // Takes care of 0
-		{
-			val = 0;
-			return UP;
-		}
-		else if (fabs(trunc(theVal)) < fabs(trunc(upVal))) // takes care of integers
-		{
-			val = trunc(upVal);
-			return UP;
-		}
-		else if (valSigdigits > upSigdigits)
-		{
-			val = upVal;
-			return UP;
-		}
-		else
-			return ANY;
-	}
-	else if (direction == DOWN) // If lower or equal value is requested
-	{
-		downVal = floatRound(val - x_scale, downSigdigits, intrep);
-		if (theVal > 0 && downVal < 0) // Takes care of 0
-		{
-			val = 0;
-			return ANY;
-		}
-		else if (fabs(trunc(theVal)) > fabs(trunc(downVal))) // takes care of integers
-		{
-			val = trunc(theVal);
-			return ANY;
-		}
-	    else if (valSigdigits > downSigdigits)
-		{
-			val = downVal;
-			return DOWN;
-		}
-		else
-			return ANY;
-	}
-	else // May round in any direction
-	{
-		upVal = floatRound(val + x_scale, upSigdigits, intrep);
-		downVal = floatRound(val - x_scale, downSigdigits, intrep);
-		if (theVal < 0 && upVal > 0)  // Takes care of 0
-		{
-			val = 0;
-			return ANY;
-		}
-		else if (theVal > 0 && downVal < 0) // Takes care of 0
-		{
-			val = 0;
-			return ANY;
-		}
-	   	else if (fabs(trunc(theVal)) < fabs(trunc(upVal)))
-		{
-			val = trunc(upVal);
-			return UP;
-		}
-		else if (fabs(trunc(theVal)) > fabs(trunc(downVal))) // takes care of integers
-		{
-			val = trunc(theVal);
-			return ANY;
-		}
-		
-		int minimum = min(valSigdigits, upSigdigits);
-		minimum = min (minimum, downSigdigits);
-		
-		if(minimum ==  valSigdigits)
-		{
-			val = theVal;
-			return ANY;
-		}
-		else if (minimum == upSigdigits)
-		{
-			val = upVal;
-			return UP;
-		}
-		else
-		{
-			val = downVal;
-			return DOWN;
-		}
-	}	    	      
-}
-
-/* Round(est) double within one pixel in Y */
-Rounding Plotstream::nearRoundY(double & val, Rounding direction) const
-{
-	int valSigdigits;
-	int upSigdigits;
-	int downSigdigits;
-	long int intrep;
-	double theVal, upVal, downVal;
-	
-	theVal = floatRound(val, valSigdigits, intrep);
-	
-	if (direction == UP) // If a higher or equal value has been requested
-	{
-		upVal = floatRound(val + y_scale, upSigdigits, intrep);
-		if (theVal < 0 && upVal > 0) // Takes care of 0
-		{
-			val = 0;
-			return ANY;
-		}
-		else if (fabs(trunc(theVal)) < fabs(trunc(upVal))) // takes care of integers
-		{
-			val = trunc(upVal);
-			return UP;
-		}
-		else if (valSigdigits > upSigdigits)
-		{
-			val = upVal;
-			return UP;
-		}
-		else
-			return ANY;
-	}
-	else if (direction == DOWN) // If lower or equal value is requested
-	{
-		downVal = floatRound(val - y_scale, downSigdigits, intrep);
-		if (theVal > 0 && downVal < 0) // Takes care of 0
-		{
-			val = 0;
-			return DOWN;
-		}
-		else if (fabs(trunc(theVal)) > fabs(trunc(downVal))) // takes care of integers
-		{
-			val = trunc(theVal);
-			return ANY;
-		}
-	    else if (valSigdigits > downSigdigits)
-		{
-			val = downVal;
-			return DOWN;
-		}
-		else
-			return ANY;
-	}
-	else // May round in any direction
-	{
-		upVal = floatRound(val + y_scale, upSigdigits, intrep);
-		downVal = floatRound(val - y_scale, downSigdigits, intrep);
-		if (theVal < 0 && upVal > 0)  // Takes care of 0
-		{
-			val = 0;
-			return ANY;
-		}
-		if (theVal > 0 && downVal < 0) // Takes care of 0
-		{
-			val = 0;
-			return DOWN;
-		}
-	   	   else if (fabs(trunc(theVal)) < fabs(trunc(upVal)))
-		{
-			val = trunc(upVal);
-			return UP;
-		}
-		else if (fabs(trunc(theVal)) > fabs(trunc(downVal))) // takes care of integers
-		{
-			val = trunc(theVal);
-			return ANY;
-		}
-		
-		int minimum = min(valSigdigits, upSigdigits);
-		minimum = min (minimum, downSigdigits);
-		
-		if(minimum ==  valSigdigits)
-		{
-			val = theVal;
-			return ANY;
-		}
-		else if (minimum == upSigdigits)
-		{
-			val = upVal;
-			return UP;
-		}
-		else
-		{
-			val = downVal;
-			return DOWN;
-		}
-	}	    
-}
-
-/* Draw the axes */
-void Plotstream::drawAxes(juce::Graphics& graphics)
-{
-	int xDivs;				// number of x divisions
-	int yDivs;				// number of y divisions
-	int divLength;	 	 	// length (in pixels) of a division
-	int sigdigits;
-	long int intVal;
-	      	   
-	// draw the rectangle
-	graphics.setColour(Colours::darkgrey);
-    graphics.drawRect(
-        left_border - 1,
-        border_height - 1,
-        plotWidth + 2,
-        plotHeight + 2
-    );
-				
-	// Attempt to guess a reasonable number of grid divisions for x and y
-	xDivs = getXDivisor(lo_x, hi_x, plotWidth);
-	// If y axis is large, divide in the same manner as x axis
-	if (winHeight > winWidth * 3 / 5.0)
-		yDivs = getXDivisor(lo_y, hi_y, plotHeight);
-	else	
-		yDivs = getYDivisor(lo_y, hi_y, plotHeight);
-		
-	// draw the grid
-	graphics.setColour(Colours::lightgrey);
-    float dashPattern[] = {4, 4};
-	// Horizontal grid
-	for (int i = yDivs - 1; i > 0; i--)
-	{
-        graphics.drawDashedLine(Line<float>(
-            left_border, border_height + plotHeight * i / yDivs,
-            winWidth - border_width, border_height + plotHeight * i / yDivs),
-            dashPattern, 2
-        );
-	}
-
-	// Vertical grid
-	for (int i = xDivs - 1; i > 0; i--)
-	{
-        graphics.drawDashedLine(Line<float>(
-            left_border + 1 + plotWidth * i / xDivs, border_height,
-            left_border + 1 + plotWidth * i / xDivs, winHeight - border_height),
-            dashPattern, 2
-        );
-	}
-
-	// Draw Axes markers
-	graphics.setColour(Colours::darkgrey);
-
-	// Y axis
-	for (int i = yDivs - 1; i > 0; i--)
-	{
-        graphics.drawLine(
-            left_border, border_height + plotHeight * i / yDivs,
-            left_border + mark_length, border_height + plotHeight * i / yDivs
-        );
-		graphics.drawLine(
-            winWidth - border_width, border_height + plotHeight * i / yDivs,
-            winWidth - border_width - mark_length, border_height + plotHeight * i / yDivs
-        );
-	}
-
-	// X axis
-	for (int i = xDivs - 1; i > 0; i--)
-	{
-		graphics.drawLine(
-            left_border + 1 + plotWidth * i / xDivs, winHeight - border_height,
-            left_border + 1 + plotWidth * i / xDivs, winHeight - border_height - mark_length
-        );
-		graphics.drawLine(
-            left_border + 1 + plotWidth * i / xDivs, border_height,
-            left_border + 1 + plotWidth * i / xDivs, border_height + mark_length
-        );
-	}
-
-	// Number the axes
-	graphics.setColour(Colours::black);
-
-	// Y axis
-    Font font;
-    font.setTypefaceName(Font::getDefaultSansSerifFontName());
-    graphics.setFont(font);
-    auto fontHeight = graphics.getCurrentFont().getHeight();
-    
-	divLength = int(plotHeight / yDivs);
-	int xpos = left_border - 3;
-	int ypos = border_height;
-	double divVal = floatRound((lo_y - hi_y) / yDivs, sigdigits, intVal);
-	
-	for (int i = 0;  i <= yDivs; i++)
-	{
-		double val = floatRound(hi_y + divVal * i, sigdigits, intVal);
-		if(fabs(val) < chouia * (hi_y - lo_y))
-			val = 0;
-		auto asciival = dtoa(val, 3);
-        graphics.drawSingleLineText(asciival, xpos, ypos + divLength * i + fontHeight / 3, Justification::right);
-	}
-
-	// X axis
-	ypos = winHeight - border_height/2 + 5;
-	xpos = left_border - 3;
-	divVal = floatRound((hi_x - lo_x) / xDivs, sigdigits, intVal);
-	for (int i = 0;  i <= xDivs; i++)
-	{
-		double val = floatRound(lo_x + divVal * i, sigdigits, intVal);
-		if(fabs(val) < chouia * (hi_x - lo_x))
-			val = 0;
-		auto asciival = dtoa(val, 3);
-        graphics.drawSingleLineText(asciival, xpos + plotWidth * i / xDivs, ypos, Justification::horizontallyCentred);
-	}
-}
-
-void Plotstream::drawFunc(juce::Graphics& graphics, const Plotdata & x, const Plotdata & y)
-{
-	vector<double>::const_iterator x_it  = x.getData().begin();
-	vector<double>::const_iterator y_it  = y.getData().begin();
-	vector<double>::const_iterator x_end = x.getData().end();
-
-	setFgColor(graphics, colour);
-    
-    Point<float> start;
-	if (isfinite(*y_it) && isfinite(*x_it))
-	{
-        start.setXY(X(*x_it), Y(*y_it));
-		plotStarted = true;
-	}
-    
-    // Else if both x and y are NAN, then it could be either a color change
-    // request or a single point drawing request.
-    else
+    void plot(Graphics& graphics)
     {
-         if (!isfinite(*y_it) && !isfinite(*x_it))
-            if (x_it + 1 != x_end && x_it + 2 != x_end)
-                handleCommand(graphics, x_it, y_it);
-    }        
-	
-	while (++x_it != x_end)
-	{
-		if (isfinite(*(++y_it)) && isfinite(*x_it))
-		{
-			if (plotStarted)
-            {
-                graphics.drawLine(start.getX(), start.getY(), X(*x_it), Y(*y_it));
-            }
-            
-            plotStarted = true;
-            start.setXY(X(*x_it), Y(*y_it));
-		}
-        else
+        drawAxes(graphics);
+        
+        /* Draw curve */
+        for (auto& data : plotData_)
         {
-  	  	  	plotStarted = false;
-              
-            // If both x and y are NAN, then it could be either a colour
-            // change request or a single point drawing request.
-             if (!isfinite(*y_it) && !isfinite(*x_it))
-                if (x_it + 1 != x_end && x_it + 2 != x_end)
-                    handleCommand(graphics, x_it, y_it);
+            drawFunc(graphics, data);
         }
     }
-}
 
-/* Checks the mouse for left-click. 
- * Prints the plot coordinates of the click in the top border area.
- * returns true if the keyboard was not pressed.
- */
-//bool Plotstream::watchMouse( )
-//{
-//	if (left_clicked) 
-//	{	 
-//		double xClick = plotX(cursorX);
-//		double yClick = plotY(cursorY);
-//		
-//		Rounding xRounding = nearRoundX(xClick);
-//		Rounding yRounding = nearRoundY(yClick);
-//
-//		swapbuffers();
-//		
-//		if (withinRange(xClick, yClick)) // write location of mouse and place marker
-//		{
-//			// Adjust the marker location in function of the rounding
-//			cursorX += xRounding - 1;
-//			cursorY -= yRounding - 1;
-//			
-//			// Draw the location marker if within the graph
-//			drawMarker();
-//
-//			char * xLoc = dtoa(xClick);
-//			char * yLoc = dtoa(yClick);
-//			char * location = new char[strlen(xLoc) + strlen(yLoc) + 10];
-//		   	   	   	   
-//			int ypos = border_height / 2 + 3;
-//			int xpos = (border_width + winWidth) / 2;
-//		   				
-//			// Delete previous location string if any   
-//			delRectangle(left_border, 0, winWidth - 1, border_height - 2);
-//					
-//			settextjustify(CENTER_TEXT, CENTER_TEXT);
-//			graphics.setColour(BLUE);
-//		   	   	   	   	   
-//			// Compose and print new location string
-//			strcpy(location, "( ");
-//			strcat(location, xLoc);
-//			strcat(location, " ,  ");
-//			strcat(location, yLoc);
-//			strcat(location, " )");
-//			outtextxy(xpos, ypos, location);
-//			
-//		      	   
-//			delete xLoc;
-//			delete yLoc;
-//			delete location;
-//		}
-//		else // delete all previous location info if any
-//		{
-//			// Erase marker
-//			drawMarker(ERASE);
-//	   	   	// Delete previous location string if any   
-//			delRectangle(left_border, 0, winWidth - 1, border_height - 2);
-//		}
-//		
-//		swapbuffers();
-//		// Get ready for next click
-//		left_clicked = !left_clicked;
-//	}	 
-//	return !kbhit();
-//}
-
-// Ancillary function used locally by drawMarker()
-// draws the marker shape in X and Y.
-void Plotstream::drawMarkShape(juce::Graphics& graphics, int x, int y)
-{
-	// Horz
-    
-	graphics.drawLine(x - 4, y, x + 4, y); 		// centre line
-	graphics.drawLine(x - 5, y - 1, x - 3, y - 1);
-	graphics.drawLine(x - 5, y + 1, x - 3, y + 1);	// side lines
-	graphics.drawLine(x + 5, y - 1, x + 3, y - 1);
-	graphics.drawLine(x + 5, y + 1, x + 3, y + 1);
-	// Vert
-	graphics.drawLine(x	, y - 4, x	, y + 4);	// centre line
-	graphics.drawLine(x - 1, y - 5, x - 1, y - 3);
-	graphics.drawLine(x + 1, y - 5, x + 1, y - 3);	// side lines
-	graphics.drawLine(x - 1, y + 5, x - 1, y + 3);
-	graphics.drawLine(x + 1, y + 5, x + 1, y + 3);
-}	    
-		
-// Draw a marker at the current cursor position
-// Will erase only if erase is true
-void Plotstream::drawMarker(juce::Graphics& graphics, bool erase)
-{
-	/* select XOR drawing mode and marker colour */
-//    setwritemode(XOR_PUT);
-    
-    setFgColor(graphics, marker_color);
-
-   	if (marked) // then erase existing marker
-	{
-		drawMarkShape(graphics, lastX, lastY);
-		marked = false;
-    }
-   
-    if(!erase)
-	{
-	    drawMarkShape(graphics, cursorX, cursorY);
-		lastX = cursorX;
-		lastY = cursorY;
-	    marked = true;
-	   }
-	
-	/* Restore drawing mode */
-//    setwritemode(COPY_PUT);
-    resetFgColor(graphics);
-}
-
-// Ancillary function used locally by drawSinglePoint()
-// draws the point shape in X and Y.
-void Plotstream::drawPointShape(juce::Graphics& graphics, int x, int y)
-{
-    graphics.fillRect(x - 2, y - 2, 5, 5);
-}
-
-// Draw a single point at the given coordinates
-void Plotstream::drawSinglePoint(juce::Graphics& graphics, double xCoord, double yCoord)
-{
-    drawPointShape(graphics, X(xCoord) + 1, Y(yCoord));
-}
-
-// Set new foreground colour, remember last colour
-void Plotstream::setFgColor(juce::Graphics& graphics, Colour fgColour)
-{
-    lastColour = colour;
-    colour = fgColour;
-    graphics.setColour(fgColour);
-}
-
-// Reset foreground colour to last used colour
-void Plotstream::resetFgColor(juce::Graphics& graphics)
-{
-    setFgColor(graphics, lastColour);
-}
-
-/*
- * Check whether the stream holds a request at this point.
- * and handle the request if it does.
- * A request can be a colour change, or a point marker.
- * 
- * Pre-condition:   The data vectors hold at least the 3 data points
- *                  in x and y necessary to hold a command request.
- * Post-condition:  On exit the iterators are unchanged if the data is not
- *                  a known command. They will point to the last data point
- *                  in the request sequence otherwise.
- */
-void Plotstream::handleCommand(juce::Graphics& graphics, dataIterator &x_it, dataIterator &y_it)
-{
-    // Check if command is a colour change
-    int newColour = Plotdata::colorChange(x_it, y_it);
-    
-    if (Plotdata::isColor(newColour))
+    void setWindow(int width, int height)
     {
-        if (newColour == RESETCOLOR)
-            setFgColor(graphics, lastColour);
+        winWidth = width;
+        winHeight = height;
+    }
+    
+    void setPlotRange(double loX, double hiX, double loY, double hiY)
+    {
+        this->loX = loX;
+        this->hiX = hiX;
+        this->loY = loY;
+        this->hiY = hiY;
+        
+        x_range = hiX - loX;
+        y_range = hiY - loY;
+        
+        plotWidth = winWidth - border_width - left_border;
+        plotHeight = winHeight - 2 * border_width;
+        
+        x_scale = x_range / plotWidth;
+        y_scale = y_range / plotHeight;
+    }
+    
+    void addPlotData(Expression expr, juce::Colour colour = juce::Colours::transparentBlack, juce::String name = juce::String::empty)
+    {
+        plotData_.emplace_back(expr, name, colour);
+    }
+    
+private:
+    
+    /* Convert graph x value to screen coordinate */
+    float X(double x) const
+    {
+        return (x - loX) / x_scale + left_border;
+    }
+    
+    /* Convert graph y value to screen coordinate */
+    float Y(double y) const
+    {
+        return winHeight - border_height - (y - loY) / y_scale;
+    }
+    
+    /* Convert screen coordinate to graph x value */
+    double plotX(int screenX) const
+    {
+        return (screenX - left_border) * x_scale + loX;
+    }
+    
+    /* Convert screen coordinate to graph y value */
+    double plotY(int screenY) const
+    {
+        return (winHeight - border_height - screenY) * y_scale + loY;
+    }
+    
+    /* @return  true if given location is within x and y axes ranges */
+    bool withinRange( double x, double y) const
+    {
+        return	x + x_scale >= loX && x - x_scale <= hiX
+        &&
+        y + y_scale >= loY && y - y_scale <= hiY;
+    }
+    
+    void drawFunc(juce::Graphics& graphics, const PlotData& data)
+    {
+        graphics.setColour(data.colour);
+        
+        auto incr = (hiX - loX) / Grain::MEDIUM;
+        auto& expr = data.expr;
+        
+        Point<float> start(X(loX), Y(expr[loX]));
+        
+        for (auto x = loX + incr; x <= hiX; x += incr)
+        {
+            auto y = expr[x];
+            auto nextPoint = Point<float>(X(x), Y(y));
+            graphics.drawLine(start.getX(), start.getY(), nextPoint.getX(), nextPoint.getY());
+            start = nextPoint;
+        }
+    }
+    
+    
+    // Ancillary function used locally by drawSinglePoint()
+    // draws the point shape in X and Y.
+    void drawPointShape(juce::Graphics& graphics, int x, int y)
+    {
+        graphics.fillRect(x - 2, y - 2, 5, 5);
+    }
+    
+    // Draw a single point at the given coordinates
+    void drawSinglePoint(juce::Graphics& graphics, double xCoord, double yCoord)
+    {
+        drawPointShape(graphics, X(xCoord) + 1, Y(yCoord));
+    }
+    
+    /* Draws the axes */
+    void drawAxes(juce::Graphics& graphics)
+    {
+        int xDivs;				// number of x divisions
+        int yDivs;				// number of y divisions
+        int divLength;	 	 	// length (in pixels) of a division
+        int sigdigits;
+        long int intVal;
+        
+        // draw the rectangle
+        graphics.setColour(Colours::darkgrey);
+        graphics.drawRect(
+                          left_border - 1,
+                          border_height - 1,
+                          plotWidth + 2,
+                          plotHeight + 2
+                          );
+        
+        // Attempt to guess a reasonable number of grid divisions for x and y
+        xDivs = getXDivisor(loX, hiX, plotWidth);
+        // If y axis is large, divide in the same manner as x axis
+        if (winHeight > winWidth * 3 / 5.0)
+            yDivs = getXDivisor(loY, hiY, plotHeight);
         else
-            setFgColor(graphics, Colour(newColour));
+            yDivs = getYDivisor(loY, hiY, plotHeight);
+        
+        // draw the grid
+        graphics.setColour(Colours::lightgrey);
+        float dashPattern[] = {4, 4};
+        // Horizontal grid
+        for (int i = yDivs - 1; i > 0; i--)
+        {
+            graphics.drawDashedLine(Line<float>(
+                                                left_border, border_height + plotHeight * i / yDivs,
+                                                winWidth - border_width, border_height + plotHeight * i / yDivs),
+                                    dashPattern, 2
+                                    );
+        }
+        
+        // Vertical grid
+        for (int i = xDivs - 1; i > 0; i--)
+        {
+            graphics.drawDashedLine(Line<float>(
+                                                left_border + 1 + plotWidth * i / xDivs, border_height,
+                                                left_border + 1 + plotWidth * i / xDivs, winHeight - border_height),
+                                    dashPattern, 2
+                                    );
+        }
+        
+        // Draw Axes markers
+        graphics.setColour(Colours::darkgrey);
+        
+        // Y axis
+        for (int i = yDivs - 1; i > 0; i--)
+        {
+            graphics.drawLine(
+                              left_border, border_height + plotHeight * i / yDivs,
+                              left_border + mark_length, border_height + plotHeight * i / yDivs
+                              );
+            graphics.drawLine(
+                              winWidth - border_width, border_height + plotHeight * i / yDivs,
+                              winWidth - border_width - mark_length, border_height + plotHeight * i / yDivs
+                              );
+        }
+        
+        // X axis
+        for (int i = xDivs - 1; i > 0; i--)
+        {
+            graphics.drawLine(
+                              left_border + 1 + plotWidth * i / xDivs, winHeight - border_height,
+                              left_border + 1 + plotWidth * i / xDivs, winHeight - border_height - mark_length
+                              );
+            graphics.drawLine(
+                              left_border + 1 + plotWidth * i / xDivs, border_height,
+                              left_border + 1 + plotWidth * i / xDivs, border_height + mark_length
+                              );
+        }
+        
+        // Number the axes
+        graphics.setColour(Colours::black);
+        
+        // Y axis
+        Font font;
+        font.setTypefaceName(Font::getDefaultSansSerifFontName());
+        graphics.setFont(font);
+        auto fontHeight = graphics.getCurrentFont().getHeight();
+        
+        divLength = int(plotHeight / yDivs);
+        int xpos = left_border - 3;
+        int ypos = border_height;
+        double divVal = floatRound((loY - hiY) / yDivs, intVal);
+        
+        for (int i = 0;  i <= yDivs; i++)
+        {
+            double val = floatRound(hiY + divVal * i, intVal);
+            if(fabs(val) < chouia * (hiY - loY))
+                val = 0;
+            auto asciival = dtoa(val, 3);
+            graphics.drawSingleLineText(asciival, xpos, ypos + divLength * i + fontHeight / 3, Justification::right);
+        }
+        
+        // X axis
+        ypos = winHeight - border_height/2 + 5;
+        xpos = left_border - 3;
+        divVal = floatRound((hiX - loX) / xDivs, intVal);
+        for (int i = 0;  i <= xDivs; i++)
+        {
+            double val = floatRound(loX + divVal * i, intVal);
+            if(fabs(val) < chouia * (hiX - loX))
+                val = 0;
+            auto asciival = dtoa(val, 3);
+            graphics.drawSingleLineText(asciival, xpos + plotWidth * i / xDivs, ypos, Justification::horizontallyCentred);
+        }
     }
-    // else, draw a single point if requested
-    else
-    {
-        double xCoord, yCoord;
-        if(Plotdata::singlePoint(xCoord, yCoord, x_it, y_it))
-            drawSinglePoint(graphics, xCoord, yCoord);
-    }       
+    
+private:
+    
+    int winWidth, winHeight;
+    int plotWidth, plotHeight;
+    
+    //	char * winTitle;
+    std::vector<PlotData> plotData_;
+    
+    double loX;	double hiX; 	// Highest and lowest data values in x
+    double loY;	double hiY;	// Highest and lowest points on y axis
+    double x_range; double y_range; // Ranges of x values and y values
+    double x_scale;	double y_scale; // Scales of graph drawing to screen pixels
+    
+    juce::Colour colour;                     // Current drawing colour
+    juce::Colour lastColour;                 // Previous drawing colour
+};
+
+Plotstream::Plotstream() : impl_(new Impl{}, [](Impl* impl) { delete impl; })
+{
+    
 }
+
+void Plotstream::setWindow(int width, int height)
+{
+    impl_->setWindow(width, height);
+}
+
+void Plotstream::setPlotRange(double loX, double hiX, double loY, double hiY)
+{
+    impl_->setPlotRange(loX, hiX, loY, hiY);
+}
+
+void Plotstream::addPlotData(Expression expr, juce::Colour colour, juce::String name)
+{
+    impl_->addPlotData(expr, colour, name);
+}
+
+void Plotstream::plot(juce::Graphics& graphics)
+{
+    impl_->plot(graphics);
+}
+
+
+
 

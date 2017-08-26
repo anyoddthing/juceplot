@@ -16,6 +16,7 @@
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
+
 class MainContentComponent   : public Component
 {
 public:
@@ -27,7 +28,8 @@ public:
     void resized() override;
 
 private:
+
     //==============================================================================
-    ScopedPointer<PlotComponent> plotComponent_;
+    ScopedPointer<aot::plot::PlotComponent> plotComponent_;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };

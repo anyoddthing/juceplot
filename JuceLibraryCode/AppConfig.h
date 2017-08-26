@@ -34,8 +34,14 @@
 
 // BEGIN SECTION A
 
-#define JUCE_DISPLAY_SPLASH_SCREEN 0
-#define JUCE_REPORT_APP_USAGE 1
+#ifndef JUCE_DISPLAY_SPLASH_SCREEN
+ #define JUCE_DISPLAY_SPLASH_SCREEN 0
+#endif
+
+#ifndef JUCE_REPORT_APP_USAGE
+ #define JUCE_REPORT_APP_USAGE 1
+#endif
+
 
 // END SECTION A
 
@@ -217,18 +223,6 @@
 
 //==============================================================================
 // juce_video flags:
-
-#ifndef    JUCE_DIRECTSHOW
- //#define JUCE_DIRECTSHOW 1
-#endif
-
-#ifndef    JUCE_MEDIAFOUNDATION
- //#define JUCE_MEDIAFOUNDATION 1
-#endif
-
-#ifndef    JUCE_QUICKTIME
- //#define JUCE_QUICKTIME 1
-#endif
 
 #ifndef    JUCE_USE_CAMERA
  //#define JUCE_USE_CAMERA 1

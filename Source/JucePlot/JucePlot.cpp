@@ -9,11 +9,17 @@
  * any restriction.
  */
 #include <cmath>
+#include <ostream>
+#include <iomanip>
+#include <string>
+#include <sstream>
+#include <cfloat>
 
 #include "JucePlot.h"
 
-#include "core/Plotdata.cpp"
+namespace aot { namespace plot {
+    
 #include "core/Plotstream.cpp"
-#include "core/PlotFunctions.cpp"
-
+    
+}}
 

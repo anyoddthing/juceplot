@@ -7,15 +7,18 @@
 */
 
 #include "MainComponent.h"
-#include "JucePlot/JucePlot.h"
+
+namespace plot = aot::plot;
 
 //==============================================================================
 MainContentComponent::MainContentComponent()
 {
     setSize(800, 600);
-    Plotdata x(-4.0, 4.0), y = sin(x) - 0.5*x;
-    plotComponent_ = new PlotComponent(std::move(x), std::move(y));
+    auto expression = plot::sin(plot::x);
+    plotComponent_ = new plot::PlotComponent();
+    plotComponent_->addPlotData(expression, Colours::blue, "");
     plotComponent_->setSize(800, 600);
+    plotComponent_->setPlotRange(-3, 3, -1, 1);
     addAndMakeVisible(plotComponent_);
 }
 

@@ -1,7 +1,6 @@
-
- 
 #pragma once
 
+#include <juce_core/juce_core.h>
 #include <juce_graphics/juce_graphics.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -28,8 +27,11 @@
 
 /* -------------------------------------------------------- */
 
-#include "core/Plotdata.h"
-#include "core/Plotstream.h"
-#include "core/PlotFunctions.h"
+namespace aot { namespace plot {
 
-#include "gui/PlotComponent.h"
+    #include "core/PlotExpression.h"
+    #include "core/Plotdata.h"
+    #include "core/Plotstream.h"
+    #include "gui/PlotComponent.h"
+
+} }
