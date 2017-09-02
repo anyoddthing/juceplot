@@ -1,9 +1,5 @@
 #pragma once
 
-
-//==============================================================================
-/*
-*/
 class PlotComponent : public juce::Component
 {
 public:
@@ -11,14 +7,26 @@ public:
     {
     }
     
+    ~PlotComponent()
+    {
+        DBG("PlotComponent dtor");
+    }
+    
     void setPlotRange(double loX, double hiX, double loY, double hiY)
     {
+        DBG("PlotComponent setPlotRange");
         plotstream_.setPlotRange(loX, hiX, loY, hiY);
     }
 
     void addPlotData(Expression expr, juce::Colour colour, juce::String name)
     {
+        DBG("PlotComponent addPlotData");
         plotstream_.addPlotData(std::move(expr), colour, name);
+    }
+    
+    void zoom(double widthZoom, double heightZoom)
+    {
+        
     }
     
     void paint(juce::Graphics& g) override
@@ -26,15 +34,15 @@ public:
         DBG("paint");
         plotstream_.plot(g);
     }
-
+    
     void resized() override
     {
-        DBG("resizes");
+        DBG("PlotComponent resized: w:" << getWidth() << " height:" << getHeight());
         plotstream_.setWindow(getWidth(), getHeight());
     }
 
 private:
-    Plotstream plotstream_;
+    PlotStream plotstream_;
 
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PlotComponent)

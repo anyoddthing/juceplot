@@ -66,8 +66,9 @@ public:
                                                                           .findColour (ResizableWindow::backgroundColourId),
                                                     DocumentWindow::allButtons)
         {
-            setUsingNativeTitleBar (true);
-            setContentOwned (new MainContentComponent(), true);
+            setUsingNativeTitleBar(true);
+            setContentOwned(new MainContentComponent(), true);
+            setResizable(true, false);
 
             auto parentArea = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
             auto width = getWidth();

@@ -7,10 +7,10 @@ enum Rounding
 	UP
 };
 
-class Plotstream
+class PlotStream
 {
 public:
-    Plotstream();
+    PlotStream();
 
     void setWindow(int width, int height);
     void setPlotRange(double loX, double hiX, double loY, double hiY);    

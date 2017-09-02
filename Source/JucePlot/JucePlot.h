@@ -27,11 +27,14 @@
 
 /* -------------------------------------------------------- */
 
+#include <sstream>
+
 namespace aot { namespace plot {
 
     #include "core/PlotExpression.h"
-    #include "core/Plotdata.h"
-    #include "core/Plotstream.h"
+    #include "core/PlotData.h"
+    #include "core/PlotRange.h"
+    #include "core/PlotStream.h"
     #include "gui/PlotComponent.h"
 
 } }

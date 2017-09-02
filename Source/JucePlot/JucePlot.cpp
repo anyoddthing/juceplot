@@ -19,7 +19,7 @@
 
 namespace aot { namespace plot {
     
-#include "core/Plotstream.cpp"
+#include "core/PlotStream.cpp"
     
 }}
 

@@ -14,12 +14,14 @@ namespace plot = aot::plot;
 MainContentComponent::MainContentComponent()
 {
     setSize(800, 600);
+    
     auto expression = plot::sin(plot::x);
     plotComponent_ = new plot::PlotComponent();
     plotComponent_->addPlotData(expression, Colours::blue, "");
-    plotComponent_->setSize(800, 600);
+    plotComponent_->setSize(getWidth(), getHeight());
     plotComponent_->setPlotRange(-3, 3, -1, 1);
-    addAndMakeVisible(plotComponent_);
+
+    addAndMakeVisible(plotComponent_.get());
 }
 
 MainContentComponent::~MainContentComponent()
@@ -35,7 +37,14 @@ void MainContentComponent::paint (Graphics& g)
 
 void MainContentComponent::resized()
 {
-    // This is called when the MainContentComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
+    if (plotComponent_)
+    {
+        DBG("resized: w:" << getWidth() << " height:" << getHeight());
+        auto widthZoom = (double) plotComponent_->getWidth() / getWidth();
+        auto heightZoom = (double) plotComponent_->getHeight() / getHeight();
+        
+        plotComponent_->zoom(widthZoom, heightZoom);
+        plotComponent_->setSize(getWidth(), getHeight());
+    }
+
 }
