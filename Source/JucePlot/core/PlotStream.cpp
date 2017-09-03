@@ -1,22 +1,3 @@
-/* File: Plotstream.cxx
- *
- * Implementation class Plotstream
- * A plotstream opens a window displays a data plot, then closes
- * the window.
- *
- * left-clicking the mouse in the window displays the current plot coordinates of
- * the cursor. 
- *
- * This file hides all the fiddly bits about plotting a function.
- *
- * Author: 	jlk
- * Version:	1.2
- * Date:	January 2006
- *
- * This file is in the public domain and can be used without
- * any restriction.
- */
-
 using namespace juce;
 
 // Constants used exclusively in this file

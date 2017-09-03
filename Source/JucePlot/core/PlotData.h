@@ -25,6 +25,11 @@ enum Grain
 	GROSS = 101
 };
 
+struct PlotSampler
+{
+    
+};
+
 struct PlotData
 {
     PlotData(Expression expr, juce::String name, juce::Colour colour) : expr(expr), name(name), colour(colour)

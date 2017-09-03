@@ -99,6 +99,42 @@ private:
     Expression rhs_;
 };
 
+struct PlotSamples
+{
+    void pushBack(double x, double y)
+    {
+        pushBack(juce::Point<double>(x, y));
+    }
+    
+    void pushBack(juce::Point<double> sample)
+    {
+        samples_.push_back(std::move(sample));
+    }
+    
+    double operator[](double i) const
+    {
+        if (i < samples_[0].getX() || i > samples_.back().getX())
+            return std::numeric_limits<double>::quiet_NaN();
+        
+        juce::Point<double> searchValue {i, 0};
+        auto it = std::lower_bound(samples_.begin(), samples_.end(), searchValue,
+            [](auto& element, auto& value) { return element.getX() < value.getX(); });
+
+        if (it == samples_.begin()) return samples_[0].getY();
+
+        auto& p1 = *it;
+        auto& p0 = *(it -1);
+        
+        return (p0.getY() * (p1.getX() - i) + p1.getY() * (i - p0.getX())) / (p1.getX() - p0.getX());
+    }
+    
+private:
+    mutable double lastX_;
+    mutable std::size_t lastI_;
+    
+    std::vector<juce::Point<double>> samples_;
+};
+
 
 const static Expression x = XExpression {};
 

@@ -18,9 +18,17 @@ MainContentComponent::MainContentComponent()
     auto expression = plot::sin(plot::x);
     plotComponent_ = new plot::PlotComponent();
     plotComponent_->addPlotData(expression, Colours::blue, "");
-    plotComponent_->setSize(getWidth(), getHeight());
-    plotComponent_->setPlotRange(-3, 3, -1, 1);
 
+    plot::PlotSamples samples;
+    samples.pushBack(-2, 0.8);
+    samples.pushBack(-1, -0.5);
+    samples.pushBack(-0, 0.4);
+    samples.pushBack(0.5, 0);
+    plotComponent_->addPlotData(samples, Colours::red, "");
+    
+    plotComponent_->setSize(getWidth(), getHeight());
+//    plotComponent_->setPlotRange(-3, 3, -1, 1);
+    plotComponent_->setPlotRange(-0.5, 0.5, -1, 1);
     addAndMakeVisible(plotComponent_.get());
 }
 
@@ -31,7 +39,6 @@ MainContentComponent::~MainContentComponent()
 void MainContentComponent::paint (Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    DBG("paint main");
     g.fillAll(Colours::white);
 }
 
@@ -39,7 +46,6 @@ void MainContentComponent::resized()
 {
     if (plotComponent_)
     {
-        DBG("resized: w:" << getWidth() << " height:" << getHeight());
         auto widthZoom = (double) plotComponent_->getWidth() / getWidth();
         auto heightZoom = (double) plotComponent_->getHeight() / getHeight();
         
