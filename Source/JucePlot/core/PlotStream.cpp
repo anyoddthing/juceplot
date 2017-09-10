@@ -8,21 +8,34 @@ static const int mark_length	= 4;
 
 static const float chouia		= 0.0001; // an invisible difference (in drawing terms)
 
-static String dtoa(double val, int precision)
+double frexp10(double arg, int& exp)
+{
+    if (arg == 0)
+    {
+        exp = 0;
+        return 0;
+    }
+    
+    auto fexp = std::log10(std::abs(arg));
+    
+    exp = (fexp > 0) ? (int)fexp : -std::ceil(-fexp);
+    return arg * pow(10 , -exp);
+}
+
+static String dtoa(double val, int precision, double rounding = 0)
 {
     std::ostringstream ostr;
-	ostr.precision(precision);
-	ostr << val;
-	return String(ostr.str().c_str());
+    ostr.precision(precision);
+    if (rounding > 0)
+    {
+        int exp;
+        frexp10(rounding, exp);
+        auto norm = std::pow(10, std::abs(exp));
+        val = std::lround(val * norm) / norm;
+    }
+    ostr << val;
+    return String(ostr.str().c_str());
 }
-
-// Local function hidden at file scope
-// pow10l() does not exist in mingw (redefine as inline wrapper here)
-static inline double pow10l(double x)
-{
-	return powl(10.0, x);
-}
-
 
 /************************* CLASS FUNCTIONS ***************************/
 
@@ -182,7 +195,7 @@ private:
 
         for (auto x = xStart; x <= plotRange_.hiX; x += xStep)
         {
-            auto xOffset = x * xScale + left_border - xStart * xScale;
+            auto xOffset = x * xScale + left_border - xStart * xScale + (xStart - plotRange_.loX) * xScale;
             if (! (almostEqual(x, plotRange_.loX) || almostEqual(x, plotRange_.hiX)))
             {
                 graphics.setColour(Colours::lightgrey);
@@ -196,7 +209,7 @@ private:
                 graphics.drawLine(xOffset, border_height,
                                   xOffset, border_height + mark_length);
             }
-            auto asciival = dtoa(x, 3);
+            auto asciival = dtoa(x, 2, xStep);
             int ypos = winHeight - border_height / 2 + 5;
             graphics.drawSingleLineText(asciival, xOffset, ypos, Justification::horizontallyCentred);
         }
@@ -225,7 +238,7 @@ private:
             }
             
             int xpos = left_border - 3;
-            auto asciival = dtoa(y, 3);
+            auto asciival = dtoa(y, 2, yStep);
             graphics.drawSingleLineText(asciival, xpos, yOffset + fontHeight / 2 - 1, Justification::right);
         }
     }

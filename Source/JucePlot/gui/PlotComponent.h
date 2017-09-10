@@ -31,13 +31,11 @@ public:
     
     void paint(juce::Graphics& g) override
     {
-        DBG("paint");
         plotstream_.plot(g);
     }
     
     void resized() override
     {
-        DBG("PlotComponent resized: w:" << getWidth() << " height:" << getHeight());
         plotstream_.setWindow(getWidth(), getHeight());
     }
 
