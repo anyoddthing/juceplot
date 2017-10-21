@@ -60,21 +60,52 @@ struct PlotStream::Impl
         updatePlotRange();
     }
     
-    void setPlotRange(double loX, double hiX, double loY, double hiY)
+    void setPlotRange(PlotRange plotRange)
     {
-        plotRange_ = PlotRange(loX, hiX, loY, hiY);
+        plotRange_ = plotRange;
         updatePlotRange();
+    }
+    
+    PlotRange getPlotRange()
+    {
+        return plotRange_;
     }
     
     void updatePlotRange()
     {
-        plotWidth = winWidth - border_width - left_border;
-        plotHeight = winHeight - 2 * border_width;
+        plotWidth_ = winWidth - border_width - left_border;
+        plotHeight_ = winHeight - 2 * border_width;
+        xPlot2Screen_ = plotWidth_ / plotRange_.getXRange();
+        yPlot2Screen_ = plotHeight_ / plotRange_.getYRange();
     }
     
     void addPlotData(Expression expr, juce::Colour colour = juce::Colours::transparentBlack, juce::String name = juce::String::empty)
     {
         plotData_.emplace_back(expr, name, colour);
+    }
+    
+    /* Convert graph x value to screen coordinate */
+    float screenX(double x) const
+    {
+        return (x - plotRange_.loX) / xPlot2Screen_ + left_border;
+    }
+    
+    /* Convert graph y value to screen coordinate */
+    float screenY(double y) const
+    {
+        return winHeight - border_height - (y - plotRange_.loY) / yPlot2Screen_;
+    }
+    
+    /* Convert screen coordinate to graph x value */
+    double plotX(float screenX) const
+    {
+        return (screenX - left_border) * xPlot2Screen_ + plotRange_.loX;
+    }
+    
+    /* Convert screen coordinate to graph y value */
+    double plotY(float screenY) const
+    {
+        return (winHeight - border_height - screenY) * yPlot2Screen_ + plotRange_.loY;
     }
     
 private:
@@ -84,30 +115,6 @@ private:
         return std::abs(x-y) < std::numeric_limits<float>::epsilon() * std::abs(x+y)
                || std::abs(x-y) < std::numeric_limits<float>::min();
     }
-    
-    /* Convert graph x value to screen coordinate */
-    float X(double x, double x_scale) const
-    {
-        return (x - plotRange_.loX) / x_scale + left_border;
-    }
-    
-    /* Convert graph y value to screen coordinate */
-    float Y(double y, double y_scale) const
-    {
-        return winHeight - border_height - (y - plotRange_.loY) / y_scale;
-    }
-    
-    /* Convert screen coordinate to graph x value */
-//    double plotX(int screenX) const
-//    {
-//        return (screenX - left_border) * x_scale + loX;
-//    }
-//    
-//    /* Convert screen coordinate to graph y value */
-//    double plotY(int screenY) const
-//    {
-//        return (winHeight - border_height - screenY) * y_scale + loY;
-//    }
     
     /* @return  true if given location is within x and y axes ranges */
 //    bool withinRange( double x, double y) const
@@ -123,20 +130,13 @@ private:
         auto incr = plotRange_.getIncrStep();
         auto& expr = data.expr;
         
-        auto x_range = plotRange_.getXRange();
-        auto y_range = plotRange_.getYRange();
-
-        auto x_scale = x_range / plotWidth;
-        auto y_scale = y_range / plotHeight;
-
         auto loX = plotRange_.loX;
-        
-        Point<float> start(X(loX, x_scale), Y(expr[loX], y_scale));
+        Point<float> start(screenX(loX), screenY(expr[loX]));
         
         for (auto x = loX + incr; x <= plotRange_.hiX; x += incr)
         {
             auto y = expr[x];
-            auto nextPoint = Point<float>(X(x, x_scale), Y(y, y_scale));
+            auto nextPoint = Point<float>(screenX(x), screenY(y));
             graphics.drawLine(start.getX(), start.getY(), nextPoint.getX(), nextPoint.getY());
             start = nextPoint;
         }
@@ -176,7 +176,7 @@ private:
         graphics.setColour(Colours::darkgrey);
         graphics.drawRect(
             left_border - 1, border_height - 1,
-            plotWidth + 2, plotHeight + 2);
+            plotWidth_ + 2, plotHeight_ + 2);
 
         Font font;
         font.setTypefaceName(Font::getDefaultSansSerifFontName());
@@ -187,15 +187,14 @@ private:
         float dashPattern[] = {4, 4};
         
         const int minDivWidth = 50;
-        auto maxXDivs = plotWidth / minDivWidth;
+        auto maxXDivs = plotWidth_ / minDivWidth;
         
         double xStart, xStep;
         getAxisSteps(plotRange_.loX, plotRange_.hiX, maxXDivs, xStart, xStep);
-        auto xScale = plotWidth / plotRange_.getXRange();
 
         for (auto x = xStart; x <= plotRange_.hiX; x += xStep)
         {
-            auto xOffset = x * xScale + left_border - xStart * xScale + (xStart - plotRange_.loX) * xScale;
+            auto xOffset = x * xPlot2Screen_ + left_border - xStart * xPlot2Screen_ + (xStart - plotRange_.loX) * xPlot2Screen_;
             if (! (almostEqual(x, plotRange_.loX) || almostEqual(x, plotRange_.hiX)))
             {
                 graphics.setColour(Colours::lightgrey);
@@ -216,13 +215,11 @@ private:
         
 
         double yStart, yStep;
-        auto maxYDivs = plotHeight / minDivWidth;
+        auto maxYDivs = plotHeight_ / minDivWidth;
         getAxisSteps(plotRange_.loY, plotRange_.hiY, maxYDivs, yStart, yStep);
-        auto yScale = plotHeight / plotRange_.getYRange();
-        
         for (auto y = yStart; y <= plotRange_.hiY; y += yStep)
         {
-            auto yOffset = -y * yScale + border_height + plotHeight + yStart * yScale;
+            auto yOffset = -y * yPlot2Screen_ + border_height + plotHeight_ + yStart * yPlot2Screen_;
             if (! (almostEqual(y, plotRange_.loY) || almostEqual(y, plotRange_.hiY)))
             {
                 graphics.setColour(Colours::lightgrey);
@@ -246,7 +243,8 @@ private:
 private:
     
     int winWidth, winHeight;
-    int plotWidth, plotHeight;
+    int plotWidth_, plotHeight_;
+    double xPlot2Screen_, yPlot2Screen_;
     
     //	char * winTitle;
     std::vector<PlotData> plotData_;
@@ -267,9 +265,14 @@ void PlotStream::setWindow(int width, int height)
     impl_->setSize(width, height);
 }
 
-void PlotStream::setPlotRange(double loX, double hiX, double loY, double hiY)
+void PlotStream::setPlotRange(PlotRange plotRange)
 {
-    impl_->setPlotRange(loX, hiX, loY, hiY);
+    impl_->setPlotRange(plotRange);
+}
+
+PlotRange PlotStream::getPlotRange()
+{
+    return impl_->getPlotRange();
 }
 
 void PlotStream::addPlotData(Expression expr, juce::Colour colour, juce::String name)
@@ -282,6 +285,29 @@ void PlotStream::plot(juce::Graphics& graphics)
     impl_->plot(graphics);
 }
 
+/* Convert graph x value to screen coordinate */
+float PlotStream::screenX(double x) const
+{
+    return impl_->screenX(x);
+}
+
+/* Convert graph y value to screen coordinate */
+float PlotStream::screenY(double y) const
+{
+    return impl_->screenY(y);
+}
+
+/* Convert screen coordinate to graph x value */
+double PlotStream::plotX(float screenX) const
+{
+    return impl_->plotX(screenX);
+}
+
+/* Convert screen coordinate to graph y value */
+double PlotStream::plotY(float screenY) const
+{
+    return impl_->plotY(screenY);
+}
 
 
 

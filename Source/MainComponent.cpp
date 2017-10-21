@@ -27,8 +27,8 @@ MainContentComponent::MainContentComponent()
     plotComponent_->addPlotData(samples, Colours::red, "");
     
     plotComponent_->setSize(getWidth(), getHeight());
-//    plotComponent_->setPlotRange(-3, 3, -1, 1);
-    plotComponent_->setPlotRange(-0.5, 0.5, -1, 1);
+    plotComponent_->setPlotRange(-3, 3, -1, 1);
+//    plotComponent_->setPlotRange(-0.00005, 0.00005, -1, 1);
     addAndMakeVisible(plotComponent_.get());
 }
 
@@ -46,10 +46,6 @@ void MainContentComponent::resized()
 {
     if (plotComponent_)
     {
-        auto widthZoom = (double) plotComponent_->getWidth() / getWidth();
-        auto heightZoom = (double) plotComponent_->getHeight() / getHeight();
-        
-        plotComponent_->zoom(widthZoom, heightZoom);
         plotComponent_->setSize(getWidth(), getHeight());
     }
 
