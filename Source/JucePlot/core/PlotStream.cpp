@@ -116,18 +116,9 @@ private:
                || std::abs(x-y) < std::numeric_limits<float>::min();
     }
     
-    /* @return  true if given location is within x and y axes ranges */
-//    bool withinRange( double x, double y) const
-//    {
-//        return x + x_scale >= loX && x - x_scale <= hiX
-//            && y + y_scale >= loY && y - y_scale <= hiY;
-//    }
-    
     void drawFunc(juce::Graphics& graphics, const PlotData& data)
     {
         graphics.setColour(data.colour);
-        
-//        graphics.drawLine(0, screenY(0), 1000, screenY(0));
         
         auto incr = plotRange_.getIncrStep();
         auto& expr = data.expr;
