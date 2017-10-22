@@ -87,25 +87,25 @@ struct PlotStream::Impl
     /* Convert graph x value to screen coordinate */
     float screenX(double x) const
     {
-        return (x - plotRange_.loX) / xPlot2Screen_ + left_border;
+        return (x - plotRange_.loX) * xPlot2Screen_ + left_border;
     }
     
     /* Convert graph y value to screen coordinate */
     float screenY(double y) const
     {
-        return winHeight - border_height - (y - plotRange_.loY) / yPlot2Screen_;
+        return winHeight - border_height - (y - plotRange_.loY) * yPlot2Screen_;
     }
     
     /* Convert screen coordinate to graph x value */
     double plotX(float screenX) const
     {
-        return (screenX - left_border) * xPlot2Screen_ + plotRange_.loX;
+        return (screenX - left_border) / xPlot2Screen_ + plotRange_.loX;
     }
     
     /* Convert screen coordinate to graph y value */
     double plotY(float screenY) const
     {
-        return (winHeight - border_height - screenY) * yPlot2Screen_ + plotRange_.loY;
+        return (winHeight - border_height - screenY) / yPlot2Screen_ + plotRange_.loY;
     }
     
 private:
@@ -126,6 +126,8 @@ private:
     void drawFunc(juce::Graphics& graphics, const PlotData& data)
     {
         graphics.setColour(data.colour);
+        
+//        graphics.drawLine(0, screenY(0), 1000, screenY(0));
         
         auto incr = plotRange_.getIncrStep();
         auto& expr = data.expr;
@@ -166,7 +168,8 @@ private:
         auto normalisedStep = step * std::pow(10, p);
         
         step = (normalisedStep > 0.5 ? 1 : 0.5) * std::pow(10, -p);
-        start = min - std::fmod(min, step);
+        auto remainder = std::fmod(min, step);
+        start = min - remainder;
     }
     
     /* Draws the axes */
@@ -194,7 +197,7 @@ private:
 
         for (auto x = xStart; x <= plotRange_.hiX; x += xStep)
         {
-            auto xOffset = x * xPlot2Screen_ + left_border - xStart * xPlot2Screen_ + (xStart - plotRange_.loX) * xPlot2Screen_;
+            auto xOffset = screenX(x);
             if (! (almostEqual(x, plotRange_.loX) || almostEqual(x, plotRange_.hiX)))
             {
                 graphics.setColour(Colours::lightgrey);
@@ -219,7 +222,7 @@ private:
         getAxisSteps(plotRange_.loY, plotRange_.hiY, maxYDivs, yStart, yStep);
         for (auto y = yStart; y <= plotRange_.hiY; y += yStep)
         {
-            auto yOffset = -y * yPlot2Screen_ + border_height + plotHeight_ + yStart * yPlot2Screen_;
+            auto yOffset = screenY(y);
             if (! (almostEqual(y, plotRange_.loY) || almostEqual(y, plotRange_.hiY)))
             {
                 graphics.setColour(Colours::lightgrey);

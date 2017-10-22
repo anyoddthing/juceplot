@@ -45,14 +45,11 @@ public:
         auto yRange = plotRange.getYRange();
         auto midY = plotRange.loY + yRange * splitY;
 
-        
         plotstream_.setPlotRange({
             midX - (midX - plotRange.loX) * zoomX,
             midX + (plotRange.hiX - midX) * zoomX,
             midY - (midY - plotRange.loY) * zoomY,
             midY + (plotRange.hiY - midY) * zoomY });
-        
-//        DBG(plotstream_.getPlotRange());
     }
     
     void move(float deltaX, float deltaY)
@@ -61,13 +58,12 @@ public:
         plotstream_.setPlotRange(plotRange.move(deltaX, deltaY));
     }
     
-    void mouseWheelMove (const juce::MouseEvent& event,
-                         const juce::MouseWheelDetails& wheel) override
+    void mouseWheelMove(const juce::MouseEvent& event,
+                        const juce::MouseWheelDetails& wheel) override
     {
         if (wheel.deltaX == 0 && wheel.deltaY == 0)
             return;
         
-//        DBG("moue wheel: " << wheel.deltaX << " " << wheel.deltaY);
         auto x = static_cast<float>(event.x) / getWidth();
         auto y = static_cast<float>(event.y) / getHeight();
         zoom(x, y, 1 + wheel.deltaX, 1 + wheel.deltaY);
@@ -78,7 +74,7 @@ public:
     {
         DBG("mouse drag: " << event.getDistanceFromDragStartX() << " " << event.getDistanceFromDragStartY());
         auto deltaX = plotstream_.plotX(lastDragPoint_.x) - plotstream_.plotX(event.position.x);
-        auto deltaY = plotstream_.plotX(lastDragPoint_.y) - plotstream_.plotX(event.position.y);
+        auto deltaY = plotstream_.plotY(lastDragPoint_.y) - plotstream_.plotY(event.position.y);
         lastDragPoint_ = event.position;
         
         move(deltaX, deltaY);
