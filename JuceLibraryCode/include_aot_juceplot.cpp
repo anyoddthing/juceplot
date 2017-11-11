@@ -6,4 +6,4 @@
 */
 
 #include "AppConfig.h"
-#include <JucePlot/JucePlot.cpp>
+#include <aot_juceplot/aot_juceplot.cpp>

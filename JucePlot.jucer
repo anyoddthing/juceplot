@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="GwzGhX" name="JucePlot" displaySplashScreen="0" reportAppUsage="1"
+<JUCERPROJECT id="GwzGhX" name="JucePlot" displaySplashScreen="0" reportAppUsage="0"
               splashScreenColour="Dark" projectType="guiapp" version="1.0.0"
-              bundleIdentifier="com.yourcompany.JucePlot" includeBinaryInAppConfig="1"
-              jucerVersion="5.1.1" cppLanguageStandard="14">
+              bundleIdentifier="com.anyoddthing.JucePlot" includeBinaryInAppConfig="1"
+              jucerVersion="5.2.0" cppLanguageStandard="14" companyCopyright="">
   <MAINGROUP id="W5WTnp" name="JucePlot">
     <GROUP id="{C7F0E104-850F-BBB8-1D40-E7D9EB7CBDC9}" name="Source">
       <FILE id="o83YBg" name="MainComponent.cpp" compile="1" resource="0"
@@ -16,9 +16,9 @@
     <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="JucePlot"
-                       cppLanguageStandard="c++14" cppLibType="libc++"/>
+                       cppLanguageStandard="c++14" cppLibType="libc++" enablePluginBinaryCopyStep="1"/>
         <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="JucePlot"
-                       cppLanguageStandard="c++14" cppLibType="libc++"/>
+                       cppLanguageStandard="c++14" cppLibType="libc++" enablePluginBinaryCopyStep="1"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../JUCE/modules"/>
@@ -34,12 +34,12 @@
         <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
         <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
         <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
-        <MODULEPATH id="JucePlot" path="Source"/>
+        <MODULEPATH id="aot_juceplot" path="Source"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>
   <MODULES>
-    <MODULE id="JucePlot" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="aot_juceplot" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0"/>

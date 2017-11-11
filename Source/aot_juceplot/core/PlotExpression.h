@@ -6,19 +6,19 @@ struct Expression
     
     template <typename ConstT>
     Expression(ConstT value, typename std::enable_if<std::is_arithmetic<ConstT>::value>::type* = 0)
-    : data_(std::make_shared<Model<ConstExpression>>(value))
+    : _data(std::make_shared<Model<ConstExpression>>(value))
     {
     }
     
     template <typename ExprT>
     Expression(ExprT expr, typename std::enable_if<!std::is_arithmetic<ExprT>::value>::type* = 0)
-    : data_(std::make_shared<Model<ExprT>>(std::move(expr)))
+    : _data(std::make_shared<Model<ExprT>>(std::move(expr)))
     {
     }
 
     double operator[](double i) const
     {
-        return (*data_)[i];
+        return (*_data)[i];
     }
     
 private:
@@ -32,18 +32,18 @@ private:
     template <typename ExprT>
     struct Model : virtual Contract
     {
-        Model(ExprT expr) : data_(std::move(expr)) { }
+        Model(ExprT expr) : _data(std::move(expr)) { }
         
         double operator[](double i) const override
         {
-            return data_[i];
+            return _data[i];
         }
         
     private:
-        ExprT data_;
+        ExprT _data;
     };
     
-    std::shared_ptr<Contract> data_;
+    std::shared_ptr<Contract> _data;
 };
 
 struct XExpression
@@ -56,47 +56,47 @@ struct XExpression
 
 struct ConstExpression
 {
-    ConstExpression(double val) : val_(val) { }
+    ConstExpression(double val) : _val(val) { }
     
     double operator[](double i) const
     {
-        return val_;
+        return _val;
     }
     
 private:
-    double val_;
+    double _val;
 };
 
 struct Function
 {
-    Function(double (*func)(double), Expression expr) : func_(func), expr_(expr) { }
+    Function(double (*func)(double), Expression expr) : _func(func), _expr(expr) { }
     
     double operator[](double i) const
     {
-        return func_(expr_[i]);
+        return _func(_expr[i]);
     }
     
 private:
-    std::function<double(double)> func_;
-    Expression expr_;
+    std::function<double(double)> _func;
+    Expression _expr;
 };
 
 template <typename OperationT>
 struct Operation
 {
     Operation(Expression lhs, Expression rhs)
-    : lhs_(std::move(lhs)), rhs_(std::move(rhs))
+    : _lhs(std::move(lhs)), _rhs(std::move(rhs))
     {}
     
     double operator[](double i) const
     {
         OperationT operation;
-        return operation(lhs_[i], rhs_[i]);
+        return operation(_lhs[i], _rhs[i]);
     }
     
 private:
-    Expression lhs_;
-    Expression rhs_;
+    Expression _lhs;
+    Expression _rhs;
 };
 
 struct PlotSamples
@@ -108,19 +108,19 @@ struct PlotSamples
     
     void pushBack(juce::Point<double> sample)
     {
-        samples_.push_back(std::move(sample));
+        _samples.push_back(std::move(sample));
     }
     
     double operator[](double i) const
     {
-        if (i < samples_[0].getX() || i > samples_.back().getX())
+        if (i < _samples[0].getX() || i > _samples.back().getX())
             return std::numeric_limits<double>::quiet_NaN();
         
         juce::Point<double> searchValue {i, 0};
-        auto it = std::lower_bound(samples_.begin(), samples_.end(), searchValue,
+        auto it = std::lower_bound(_samples.begin(), _samples.end(), searchValue,
             [](auto& element, auto& value) { return element.getX() < value.getX(); });
 
-        if (it == samples_.begin()) return samples_[0].getY();
+        if (it == _samples.begin()) return _samples[0].getY();
 
         auto& p1 = *it;
         auto& p0 = *(it -1);
@@ -130,9 +130,9 @@ struct PlotSamples
     
 private:
     mutable double lastX_;
-    mutable std::size_t lastI_;
+    mutable std::size_t _lastI;
     
-    std::vector<juce::Point<double>> samples_;
+    std::vector<juce::Point<double>> _samples;
 };
 
 

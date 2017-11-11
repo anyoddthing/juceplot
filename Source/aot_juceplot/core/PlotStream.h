@@ -36,6 +36,6 @@ public:
 private:
     
     class Impl;
-    std::unique_ptr<Impl, void (*)(Impl *)> impl_;
+    std::unique_ptr<Impl, void (*)(Impl *)> _impl;
 };
 

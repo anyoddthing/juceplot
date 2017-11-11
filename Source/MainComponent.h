@@ -30,6 +30,6 @@ public:
 private:
 
     //==============================================================================
-    ScopedPointer<aot::plot::PlotComponent> plotComponent_;
+    ScopedPointer<aot::plot::PlotComponent> _plotComponent;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };

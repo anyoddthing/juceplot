@@ -51,7 +51,7 @@ struct PlotRange
         return stream;
     }
 
-    double loX;	double hiX; 	// Highest and lowest data values in x
+    double loX;	double hiX; // Highest and lowest data values in x
     double loY;	double hiY;	// Highest and lowest points on y axis
 
 };

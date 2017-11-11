@@ -13,10 +13,10 @@
 
  BEGIN_JUCE_MODULE_DECLARATION
 
-  ID:               JucePlot
+  ID:               aot_juceplot
   vendor:           daniel@anyoddthing.com
   version:          0.0.1
-  name:             JucePlot
+  name:             aot_juceplot
   description:      Simple plotting lib derived from koolplot.
   website:          http://www.anyoddthing.com
   license:          BSD

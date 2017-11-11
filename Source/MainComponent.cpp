@@ -16,20 +16,20 @@ MainContentComponent::MainContentComponent()
     setSize(800, 600);
     
     auto expression = plot::sin(plot::x);
-    plotComponent_ = new plot::PlotComponent();
-    plotComponent_->addPlotData(expression, Colours::blue, "");
+    _plotComponent = new plot::PlotComponent();
+    _plotComponent->addPlotData(expression, Colours::blue, "");
 
     plot::PlotSamples samples;
     samples.pushBack(-2, 0.8);
     samples.pushBack(-1, -0.5);
     samples.pushBack(-0, 0.4);
     samples.pushBack(0.5, 0);
-    plotComponent_->addPlotData(samples, Colours::red, "");
+    _plotComponent->addPlotData(samples, Colours::red, "");
     
-    plotComponent_->setSize(getWidth(), getHeight());
-    plotComponent_->setPlotRange(-3, 3, -1, 1);
+    _plotComponent->setSize(getWidth(), getHeight());
+    _plotComponent->setPlotRange(-3, 3, -1, 1);
 //    plotComponent_->setPlotRange(-0.00005, 0.00005, -1, 1);
-    addAndMakeVisible(plotComponent_.get());
+    addAndMakeVisible(_plotComponent.get());
 }
 
 MainContentComponent::~MainContentComponent()
@@ -44,9 +44,9 @@ void MainContentComponent::paint (Graphics& g)
 
 void MainContentComponent::resized()
 {
-    if (plotComponent_)
+    if (_plotComponent)
     {
-        plotComponent_->setSize(getWidth(), getHeight());
+        _plotComponent->setSize(getWidth(), getHeight());
     }
 
 }

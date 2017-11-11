@@ -1,12 +1,10 @@
 using namespace juce;
 
 // Constants used exclusively in this file
-static const int border_height	= 20;
-static const int border_width	= 20;
-static const int left_border	= 70;
-static const int mark_length	= 4;
-
-static const float chouia		= 0.0001; // an invisible difference (in drawing terms)
+static const int BORDER_HEIGHT	= 20;
+static const int BORDER_WIDTH	= 20;
+static const int LEFT_BORDER	= 70;
+static const int MARK_LENGTH	= 4;
 
 double frexp10(double arg, int& exp)
 {
@@ -46,7 +44,7 @@ struct PlotStream::Impl
         drawAxes(graphics);
         
         /* Draw curve */
-        for (auto& data : plotData_)
+        for (auto& data : _plotData)
         {
             drawFunc(graphics, data);
         }
@@ -54,58 +52,58 @@ struct PlotStream::Impl
 
     void setSize(int width, int height)
     {
-        winWidth = width;
-        winHeight = height;
+        _winWidth = width;
+        _winHeight = height;
         
         updatePlotRange();
     }
     
     void setPlotRange(PlotRange plotRange)
     {
-        plotRange_ = plotRange;
+        _plotRange = plotRange;
         updatePlotRange();
     }
     
     PlotRange getPlotRange()
     {
-        return plotRange_;
+        return _plotRange;
     }
     
     void updatePlotRange()
     {
-        plotWidth_ = winWidth - border_width - left_border;
-        plotHeight_ = winHeight - 2 * border_width;
-        xPlot2Screen_ = plotWidth_ / plotRange_.getXRange();
-        yPlot2Screen_ = plotHeight_ / plotRange_.getYRange();
+        _plotWidth = _winWidth - BORDER_WIDTH - LEFT_BORDER;
+        _plotHeight = _winHeight - 2 * BORDER_WIDTH;
+        _xPlot2Screen = _plotWidth / _plotRange.getXRange();
+        _yPlot2Screen = _plotHeight / _plotRange.getYRange();
     }
     
     void addPlotData(Expression expr, juce::Colour colour = juce::Colours::transparentBlack, juce::String name = juce::String::empty)
     {
-        plotData_.emplace_back(expr, name, colour);
+        _plotData.emplace_back(expr, name, colour);
     }
     
     /* Convert graph x value to screen coordinate */
     float screenX(double x) const
     {
-        return (x - plotRange_.loX) * xPlot2Screen_ + left_border;
+        return (x - _plotRange.loX) * _xPlot2Screen + LEFT_BORDER;
     }
     
     /* Convert graph y value to screen coordinate */
     float screenY(double y) const
     {
-        return winHeight - border_height - (y - plotRange_.loY) * yPlot2Screen_;
+        return _winHeight - BORDER_HEIGHT - (y - _plotRange.loY) * _yPlot2Screen;
     }
     
     /* Convert screen coordinate to graph x value */
     double plotX(float screenX) const
     {
-        return (screenX - left_border) / xPlot2Screen_ + plotRange_.loX;
+        return (screenX - LEFT_BORDER) / _xPlot2Screen + _plotRange.loX;
     }
     
     /* Convert screen coordinate to graph y value */
     double plotY(float screenY) const
     {
-        return (winHeight - border_height - screenY) / yPlot2Screen_ + plotRange_.loY;
+        return (_winHeight - BORDER_HEIGHT - screenY) / _yPlot2Screen + _plotRange.loY;
     }
     
 private:
@@ -120,13 +118,13 @@ private:
     {
         graphics.setColour(data.colour);
         
-        auto incr = plotRange_.getIncrStep();
+        auto incr = _plotRange.getIncrStep();
         auto& expr = data.expr;
         
-        auto loX = plotRange_.loX;
+        auto loX = _plotRange.loX;
         Point<float> start(screenX(loX), screenY(expr[loX]));
         
-        for (auto x = loX + incr; x <= plotRange_.hiX; x += incr)
+        for (auto x = loX + incr; x <= _plotRange.hiX; x += incr)
         {
             auto y = expr[x];
             auto nextPoint = Point<float>(screenX(x), screenY(y));
@@ -142,13 +140,6 @@ private:
     {
         graphics.fillRect(x - 2, y - 2, 5, 5);
     }
-    
-    // Draw a single point at the given coordinates
-//    void drawSinglePoint(juce::Graphics& graphics, double xCoord, double yCoord)
-//    {
-//        drawPointShape(graphics, X(xCoord) + 1, Y(yCoord));
-//    }
-    
     
     void getAxisSteps(double min, double max, int maxDivs, double& start, double& step)
     {
@@ -169,8 +160,8 @@ private:
         // draw the rectangle
         graphics.setColour(Colours::darkgrey);
         graphics.drawRect(
-            left_border - 1, border_height - 1,
-            plotWidth_ + 2, plotHeight_ + 2);
+            LEFT_BORDER - 1, BORDER_HEIGHT - 1,
+            _plotWidth + 2, _plotHeight + 2);
 
         Font font;
         font.setTypefaceName(Font::getDefaultSansSerifFontName());
@@ -181,54 +172,53 @@ private:
         float dashPattern[] = {4, 4};
         
         const int minDivWidth = 50;
-        auto maxXDivs = plotWidth_ / minDivWidth;
+        auto maxXDivs = _plotWidth / minDivWidth;
         
         double xStart, xStep;
-        getAxisSteps(plotRange_.loX, plotRange_.hiX, maxXDivs, xStart, xStep);
+        getAxisSteps(_plotRange.loX, _plotRange.hiX, maxXDivs, xStart, xStep);
 
-        for (auto x = xStart; x <= plotRange_.hiX; x += xStep)
+        for (auto x = xStart; x <= _plotRange.hiX; x += xStep)
         {
             auto xOffset = screenX(x);
-            if (! (almostEqual(x, plotRange_.loX) || almostEqual(x, plotRange_.hiX)))
+            if (! (almostEqual(x, _plotRange.loX) || almostEqual(x, _plotRange.hiX)))
             {
                 graphics.setColour(Colours::lightgrey);
-                graphics.drawDashedLine(Line<float>(xOffset, border_height,
-                                                    xOffset, winHeight - border_height),
+                graphics.drawDashedLine(Line<float>(xOffset, BORDER_HEIGHT,
+                                                    xOffset, _winHeight - BORDER_HEIGHT),
                                         dashPattern, 2);
                 
                 graphics.setColour(Colours::darkgrey);
-                graphics.drawLine(xOffset, winHeight - border_height,
-                                  xOffset, winHeight - border_height - mark_length);
-                graphics.drawLine(xOffset, border_height,
-                                  xOffset, border_height + mark_length);
+                graphics.drawLine(xOffset, _winHeight - BORDER_HEIGHT,
+                                  xOffset, _winHeight - BORDER_HEIGHT - MARK_LENGTH);
+                graphics.drawLine(xOffset, BORDER_HEIGHT,
+                                  xOffset, BORDER_HEIGHT + MARK_LENGTH);
             }
             auto asciival = dtoa(x, 2, xStep);
-            int ypos = winHeight - border_height / 2 + 5;
+            int ypos = _winHeight - BORDER_HEIGHT / 2 + 5;
             graphics.drawSingleLineText(asciival, xOffset, ypos, Justification::horizontallyCentred);
         }
-        
 
         double yStart, yStep;
-        auto maxYDivs = plotHeight_ / minDivWidth;
-        getAxisSteps(plotRange_.loY, plotRange_.hiY, maxYDivs, yStart, yStep);
-        for (auto y = yStart; y <= plotRange_.hiY; y += yStep)
+        auto maxYDivs = _plotHeight / minDivWidth;
+        getAxisSteps(_plotRange.loY, _plotRange.hiY, maxYDivs, yStart, yStep);
+        for (auto y = yStart; y <= _plotRange.hiY; y += yStep)
         {
             auto yOffset = screenY(y);
-            if (! (almostEqual(y, plotRange_.loY) || almostEqual(y, plotRange_.hiY)))
+            if (! (almostEqual(y, _plotRange.loY) || almostEqual(y, _plotRange.hiY)))
             {
                 graphics.setColour(Colours::lightgrey);
-                graphics.drawDashedLine(Line<float>(left_border, yOffset,
-                                                    winWidth - border_width, yOffset),
+                graphics.drawDashedLine(Line<float>(LEFT_BORDER, yOffset,
+                                                    _winWidth - BORDER_WIDTH, yOffset),
                                         dashPattern, 2);
                 
                 graphics.setColour(Colours::darkgrey);
-                graphics.drawLine(left_border, yOffset,
-                                  left_border + mark_length, yOffset);
-                graphics.drawLine(winWidth - border_width, yOffset,
-                                  winWidth - border_width - mark_length, yOffset);
+                graphics.drawLine(LEFT_BORDER, yOffset,
+                                  LEFT_BORDER + MARK_LENGTH, yOffset);
+                graphics.drawLine(_winWidth - BORDER_WIDTH, yOffset,
+                                  _winWidth - BORDER_WIDTH - MARK_LENGTH, yOffset);
             }
             
-            int xpos = left_border - 3;
+            int xpos = LEFT_BORDER - 3;
             auto asciival = dtoa(y, 2, yStep);
             graphics.drawSingleLineText(asciival, xpos, yOffset + fontHeight / 2 - 1, Justification::right);
         }
@@ -236,71 +226,68 @@ private:
 
 private:
     
-    int winWidth, winHeight;
-    int plotWidth_, plotHeight_;
-    double xPlot2Screen_, yPlot2Screen_;
+    int _winWidth, _winHeight;
+    int _plotWidth, _plotHeight;
+    double _xPlot2Screen, _yPlot2Screen;
     
-    //	char * winTitle;
-    std::vector<PlotData> plotData_;
-    PlotRange plotRange_;
+    std::vector<PlotData> _plotData;
+    PlotRange _plotRange;
     
-    juce::Colour colour;                     // Current drawing colour
-    juce::Colour lastColour;                 // Previous drawing colour
+    juce::Colour _colour;
 };
 
-PlotStream::PlotStream() : impl_(new Impl{}, [](Impl* impl) { delete impl; })
+PlotStream::PlotStream() : _impl(new Impl{}, [](Impl* impl) { delete impl; })
 {
     
 }
 
 void PlotStream::setWindow(int width, int height)
 {
-    
-    impl_->setSize(width, height);
+    _impl->setSize(width, height);
 }
 
 void PlotStream::setPlotRange(PlotRange plotRange)
 {
-    impl_->setPlotRange(plotRange);
+    _impl->setPlotRange(plotRange);
 }
 
 PlotRange PlotStream::getPlotRange()
 {
-    return impl_->getPlotRange();
+    return _impl->getPlotRange();
 }
 
 void PlotStream::addPlotData(Expression expr, juce::Colour colour, juce::String name)
 {
-    impl_->addPlotData(expr, colour, name);
+    _impl->addPlotData(expr, colour, name);
 }
 
 void PlotStream::plot(juce::Graphics& graphics)
 {
-    impl_->plot(graphics);
+    _impl->plot(graphics);
 }
 
 /* Convert graph x value to screen coordinate */
 float PlotStream::screenX(double x) const
 {
-    return impl_->screenX(x);
+    return _impl->screenX(x);
 }
 
 /* Convert graph y value to screen coordinate */
 float PlotStream::screenY(double y) const
 {
-    return impl_->screenY(y);
+    return _impl->screenY(y);
 }
 
 /* Convert screen coordinate to graph x value */
 double PlotStream::plotX(float screenX) const
 {
-    return impl_->plotX(screenX);
+    return _impl->plotX(screenX);
 }
 
 /* Convert screen coordinate to graph y value */
 double PlotStream::plotY(float screenY) const
 {
-    return impl_->plotY(screenY);
+    return _impl->plotY(screenY);
 }
 
 

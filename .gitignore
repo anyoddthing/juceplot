@@ -1,2 +1,4 @@
-Builds
 .DS_Store
+Builds/MacOSX/DerivedData
+Builds/MacOSX/JucePlot.xcodeproj/project.xcworkspace
+Builds/MacOSX/JucePlot.xcodeproj/xcuserdata

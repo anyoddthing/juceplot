@@ -14,22 +14,22 @@ public:
     
     void setPlotRange(double loX, double hiX, double loY, double hiY)
     {
-        plotstream_.setPlotRange({ loX, hiX, loY, hiY });
+        _plotstream.setPlotRange({ loX, hiX, loY, hiY });
     }
 
     void addPlotData(Expression expr, juce::Colour colour, juce::String name)
     {
-        plotstream_.addPlotData(std::move(expr), colour, name);
+        _plotstream.addPlotData(std::move(expr), colour, name);
     }
     
     void paint(juce::Graphics& g) override
     {
-        plotstream_.plot(g);
+        _plotstream.plot(g);
     }
     
     void resized() override
     {
-        plotstream_.setWindow(getWidth(), getHeight());
+        _plotstream.setWindow(getWidth(), getHeight());
     }
 
     void zoom(float splitX, float splitY, float zoomX, float zoomY)
@@ -37,7 +37,7 @@ public:
         jassert(zoomX > 0);
         jassert(zoomY > 0);
         
-        auto plotRange = plotstream_.getPlotRange();
+        auto plotRange = _plotstream.getPlotRange();
         
         auto xRange = plotRange.getXRange();
         auto midX = plotRange.loX + xRange * splitX;
@@ -45,7 +45,7 @@ public:
         auto yRange = plotRange.getYRange();
         auto midY = plotRange.loY + yRange * splitY;
 
-        plotstream_.setPlotRange({
+        _plotstream.setPlotRange({
             midX - (midX - plotRange.loX) * zoomX,
             midX + (plotRange.hiX - midX) * zoomX,
             midY - (midY - plotRange.loY) * zoomY,
@@ -54,8 +54,8 @@ public:
     
     void move(float deltaX, float deltaY)
     {
-        auto plotRange = plotstream_.getPlotRange();
-        plotstream_.setPlotRange(plotRange.move(deltaX, deltaY));
+        auto plotRange = _plotstream.getPlotRange();
+        _plotstream.setPlotRange(plotRange.move(deltaX, deltaY));
     }
     
     void mouseWheelMove(const juce::MouseEvent& event,
@@ -72,10 +72,9 @@ public:
     
     void mouseDrag(const juce::MouseEvent& event) override
     {
-        DBG("mouse drag: " << event.getDistanceFromDragStartX() << " " << event.getDistanceFromDragStartY());
-        auto deltaX = plotstream_.plotX(lastDragPoint_.x) - plotstream_.plotX(event.position.x);
-        auto deltaY = plotstream_.plotY(lastDragPoint_.y) - plotstream_.plotY(event.position.y);
-        lastDragPoint_ = event.position;
+        auto deltaX = _plotstream.plotX(_lastDragPoint.x) - _plotstream.plotX(event.position.x);
+        auto deltaY = _plotstream.plotY(_lastDragPoint.y) - _plotstream.plotY(event.position.y);
+        _lastDragPoint = event.position;
         
         move(deltaX, deltaY);
         repaint();
@@ -83,13 +82,12 @@ public:
     
     void mouseDown(const juce::MouseEvent& event) override
     {
-        DBG("mouse down");
-        lastDragPoint_ = event.position;
+        _lastDragPoint = event.position;
     }
     
 private:
-    PlotStream plotstream_;
-    juce::Point<float> lastDragPoint_;
+    PlotStream _plotstream;
+    juce::Point<float> _lastDragPoint;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PlotComponent)
 };
