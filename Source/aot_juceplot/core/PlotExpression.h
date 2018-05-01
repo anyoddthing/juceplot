@@ -138,16 +138,19 @@ private:
 
 const static Expression x = XExpression {};
 
+[[maybe_unused]]
 static Expression operator*(Expression lhs, Expression rhs)
 {
     return Operation<std::multiplies<double>>(lhs, rhs);
 }
 
+[[maybe_unused]]
 static Expression operator+(Expression lhs, Expression rhs)
 {
     return Operation<std::plus<double>>(lhs, rhs);
 }
 
+[[maybe_unused]]
 static Expression sin(Expression expr)
 {
     return plot::Function(std::sin, expr);
